@@ -1,0 +1,14 @@
+base_url: '/akasha-whisper/v1'
+serve_at: '0.0.0.0:10000'
+admin_token: 'admin_114514'
+default_balance: 1000.0
+database:
+  host: 'localhost'
+  port: 5432
+  username: 'postgres'
+  password: 'lhins-f4rnk6cm'
+  database: 'akasha_agent'
+logger:
+  level: 'info'
+  formatter: 'json'
+  stdout_file_path: 'stdout.log'
