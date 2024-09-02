@@ -14,7 +14,7 @@ func main() {
 	api.BindChatCompletion()
 	api.BindListModel()
 	api.BindCreateUser()
-	global.Engine.ServeAsync(global.Config.ServeAt, make(chan struct{}))
+	global.Engine.ServeAsync(global.Config.ServeAt, make(chan struct{}, 1))
 
 	exit.BlockedUntilTerminate()
 }
