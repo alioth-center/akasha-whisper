@@ -4,7 +4,7 @@ import "time"
 
 type CheckDTO struct {
 	ID   int    `gorm:"column:id"`
-	Name string `gorm:"column:name"`
+	Name string `gorm:"column:description"`
 }
 
 type AvailableClientDTO struct {

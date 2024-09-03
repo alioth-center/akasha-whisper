@@ -3,8 +3,9 @@ module github.com/alioth-center/akasha-whisper
 go 1.22.4
 
 require (
-	github.com/alioth-center/infrastructure v1.2.18-0.20240812022951-4b8e476924ed
+	github.com/alioth-center/infrastructure v1.2.18-0.20240903084507-0fd29aa4e692
 	github.com/pandodao/tokenizer-go v0.2.0
+	github.com/pkg/errors v0.9.1
 	gorm.io/gorm v1.25.10
 )
 
@@ -41,6 +42,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.8.0 // indirect
