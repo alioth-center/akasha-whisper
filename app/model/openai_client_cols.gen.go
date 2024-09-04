@@ -10,7 +10,6 @@ type openaiclientCols struct {
 	ApiKey      string
 	Endpoint    string
 	Weight      string
-	Balance     string
 	CreatedAt   string
 	UpdatedAt   string
 }
@@ -21,7 +20,6 @@ var OpenaiClientCols = &openaiclientCols{
 	ApiKey:      "api_key",
 	Endpoint:    "endpoint",
 	Weight:      "weight",
-	Balance:     "balance",
 	CreatedAt:   "created_at",
 	UpdatedAt:   "updated_at",
 }

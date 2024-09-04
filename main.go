@@ -5,11 +5,15 @@ import (
 	"github.com/alioth-center/akasha-whisper/global"
 	"github.com/alioth-center/akasha-whisper/service"
 	"github.com/alioth-center/infrastructure/exit"
+
+	"github.com/alioth-center/akasha-whisper/app/dao"
 )
 
 func main() {
 	global.Init()
 	service.InitService()
+
+	dao.QueryTest()
 
 	api.BindChatCompletion()
 	api.BindListModel()

@@ -1,10 +1,46 @@
 package dto
 
-import "github.com/shopspring/decimal"
+import (
+	"github.com/alioth-center/infrastructure/utils/values"
+	"github.com/shopspring/decimal"
+	"strconv"
+	"strings"
+)
 
 type ClientCheckDTO struct {
 	ID   int    `gorm:"column:id"`
 	Name string `gorm:"column:description"`
+}
+
+type GetAvailableClientCND struct {
+	UserApiKey string
+	ModelName  string
+}
+
+func (cnd *GetAvailableClientCND) ParseTemplate(tmpl string) string {
+	condition := map[string]string{
+		"user_api_key": cnd.UserApiKey,
+		"model_name":   cnd.ModelName,
+	}
+
+	return values.NewRawSqlTemplateWithMap(tmpl, condition).Parse()
+}
+
+type GetClientSecretCND struct {
+	ClientIDs []int
+}
+
+func (cnd *GetClientSecretCND) ParseTemplate(tmpl string) string {
+	conditions := make([]string, 0, len(cnd.ClientIDs))
+	for _, clientID := range cnd.ClientIDs {
+		conditions = append(conditions, strconv.Itoa(clientID))
+	}
+
+	condition := map[string]string{
+		"openai_client_id": strings.Join(conditions, ","),
+	}
+
+	return values.NewRawSqlTemplateWithMap(tmpl, condition).Parse()
 }
 
 type AvailableClientDTO struct {

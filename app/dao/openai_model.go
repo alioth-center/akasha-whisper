@@ -6,11 +6,16 @@ import (
 	"github.com/alioth-center/akasha-whisper/app/model/dto"
 	"github.com/alioth-center/infrastructure/database"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 type OpenaiModelDatabaseAccessor struct {
 	db database.DatabaseV2
+}
+
+func NewOpenaiModelDatabaseAccessor(db database.DatabaseV2) *OpenaiModelDatabaseAccessor {
+	return &OpenaiModelDatabaseAccessor{db: db}
 }
 
 func (ac *OpenaiModelDatabaseAccessor) GetModelsByClientID(ctx context.Context, clientID int) (result []*dto.RelatedModelDTO, err error) {
@@ -191,4 +196,64 @@ func (ac *OpenaiModelDatabaseAccessor) GetAvailableModelsByApiKey(ctx context.Co
 	}
 
 	return result, nil
+}
+
+func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModel(ctx context.Context, modelData *model.OpenaiModel, clientIDs ...int) (err error) {
+	updates := make([]*model.OpenaiModel, 0, len(clientIDs))
+	for _, client := range clientIDs {
+		updates = append(updates, &model.OpenaiModel{
+			ClientID:        int64(client),
+			Model:           modelData.Model,
+			MaxTokens:       modelData.MaxTokens,
+			PromptPrice:     modelData.PromptPrice,
+			CompletionPrice: modelData.CompletionPrice,
+			RpmLimit:        modelData.RpmLimit,
+			TpmLimit:        modelData.TpmLimit,
+		})
+	}
+
+	indexKeys := []string{model.OpenaiModelCols.ClientID, model.OpenaiModelCols.Model}
+	updateKeys := []string{model.OpenaiModelCols.MaxTokens, model.OpenaiModelCols.PromptPrice, model.OpenaiModelCols.CompletionPrice, model.OpenaiModelCols.RpmLimit, model.OpenaiModelCols.TpmLimit}
+
+	return ac.db.CreateDataOnDuplicateKeyUpdate(ctx, updates, indexKeys, updateKeys)
+}
+
+func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModelWithClientDescriptions(ctx context.Context, modelData *model.OpenaiModel, descriptions ...string) (err error) {
+	return ac.db.GetGormCore(ctx).Transaction(func(tx *gorm.DB) error {
+		clientIDs := make([]int, 0, len(descriptions))
+		queryErr := tx.WithContext(ctx).
+			Model(&model.OpenaiClient{}).
+			Select(model.OpenaiClientCols.ID).
+			Where(model.OpenaiClientCols.Description, descriptions).
+			Scan(&clientIDs).Error
+		if queryErr != nil {
+			return queryErr
+		}
+
+		updates := make([]*model.OpenaiModel, 0, len(clientIDs))
+		for _, client := range clientIDs {
+			updates = append(updates, &model.OpenaiModel{
+				ClientID:        int64(client),
+				Model:           modelData.Model,
+				MaxTokens:       modelData.MaxTokens,
+				PromptPrice:     modelData.PromptPrice,
+				CompletionPrice: modelData.CompletionPrice,
+				RpmLimit:        modelData.RpmLimit,
+				TpmLimit:        modelData.TpmLimit,
+			})
+		}
+
+		indexKeys := []string{model.OpenaiModelCols.ClientID, model.OpenaiModelCols.Model}
+		updateKeys := []string{model.OpenaiModelCols.MaxTokens, model.OpenaiModelCols.PromptPrice, model.OpenaiModelCols.CompletionPrice, model.OpenaiModelCols.RpmLimit, model.OpenaiModelCols.TpmLimit}
+
+		duplicatedColumns := make([]clause.Column, len(indexKeys))
+		for i, key := range indexKeys {
+			duplicatedColumns[i] = clause.Column{Name: key}
+		}
+
+		return tx.WithContext(ctx).Model(&model.OpenaiModel{}).Clauses(clause.OnConflict{
+			Columns:   duplicatedColumns,
+			DoUpdates: clause.AssignmentColumns(updateKeys),
+		}).Create(updates).Error
+	})
 }

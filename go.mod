@@ -2,8 +2,12 @@ module github.com/alioth-center/akasha-whisper
 
 go 1.22.4
 
+replace (
+	github.com/alioth-center/infrastructure => ../infrastructure
+)
+
 require (
-	github.com/alioth-center/infrastructure v1.2.18-0.20240903084507-0fd29aa4e692
+	github.com/alioth-center/infrastructure v1.2.18-0.20240904062837-143265601fe0
 	github.com/pandodao/tokenizer-go v0.2.0
 	github.com/pkg/errors v0.9.1
 	gorm.io/gorm v1.25.10

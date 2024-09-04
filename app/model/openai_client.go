@@ -11,7 +11,6 @@ type OpenaiClient struct {
 	ApiKey      string    `gorm:"column:api_key;type:varchar(64);not null;comment:openai_service_api_key;index:idx_api_key"`
 	Endpoint    string    `gorm:"column:endpoint;type:varchar(64);not null;comment:openai_service_endpoint;index:idx_endpoint"`
 	Weight      int       `gorm:"column:weight;type:integer;not null;comment:openai_service_weight;index:idx_weight"`
-	Balance     float64   `gorm:"column:balance;type:decimal(16,8);not null;comment:openai_service_balance;index:idx_balance"`
 	CreatedAt   time.Time `gorm:"column:created_at;type:timestamp;not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt   time.Time `gorm:"column:updated_at;type:timestamp;not null;default:CURRENT_TIMESTAMP"`
 }

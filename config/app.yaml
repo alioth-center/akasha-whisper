@@ -4,11 +4,7 @@ admin_token: 'admin_114514'
 default_balance: 1000.0
 database:
   host: 'localhost'
-  port: 5432
+  port: 65432
   username: 'postgres'
   password: 'lhins-f4rnk6cm'
-  database: 'akasha_agent'
-logger:
-  level: 'info'
-  formatter: 'json'
-  stdout_file_path: 'stdout.log'
+  database: 'akasha_whisper'

@@ -8,7 +8,6 @@ type whisperuserCols struct {
 	ID        string
 	Email     string
 	ApiKey    string
-	Balance   string
 	Role      string
 	Language  string
 	AllowIps  string
@@ -20,7 +19,6 @@ var WhisperUserCols = &whisperuserCols{
 	ID:        "id",
 	Email:     "email",
 	ApiKey:    "api_key",
-	Balance:   "balance",
 	Role:      "role",
 	Language:  "language",
 	AllowIps:  "allow_ips",
