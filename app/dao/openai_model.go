@@ -198,18 +198,20 @@ func (ac *OpenaiModelDatabaseAccessor) GetAvailableModelsByApiKey(ctx context.Co
 	return result, nil
 }
 
-func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModel(ctx context.Context, modelData *model.OpenaiModel, clientIDs ...int) (err error) {
+func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModels(ctx context.Context, modelData []*model.OpenaiModel, clientIDs ...int) (err error) {
 	updates := make([]*model.OpenaiModel, 0, len(clientIDs))
 	for _, client := range clientIDs {
-		updates = append(updates, &model.OpenaiModel{
-			ClientID:        int64(client),
-			Model:           modelData.Model,
-			MaxTokens:       modelData.MaxTokens,
-			PromptPrice:     modelData.PromptPrice,
-			CompletionPrice: modelData.CompletionPrice,
-			RpmLimit:        modelData.RpmLimit,
-			TpmLimit:        modelData.TpmLimit,
-		})
+		for _, modelItem := range modelData {
+			updates = append(updates, &model.OpenaiModel{
+				ClientID:        int64(client),
+				Model:           modelItem.Model,
+				MaxTokens:       modelItem.MaxTokens,
+				PromptPrice:     modelItem.PromptPrice,
+				CompletionPrice: modelItem.CompletionPrice,
+				RpmLimit:        modelItem.RpmLimit,
+				TpmLimit:        modelItem.TpmLimit,
+			})
+		}
 	}
 
 	indexKeys := []string{model.OpenaiModelCols.ClientID, model.OpenaiModelCols.Model}

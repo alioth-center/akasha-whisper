@@ -2,10 +2,6 @@ module github.com/alioth-center/akasha-whisper
 
 go 1.22.4
 
-replace (
-	github.com/alioth-center/infrastructure => ../infrastructure
-)
-
 require (
 	github.com/alioth-center/infrastructure v1.2.18-0.20240904062837-143265601fe0
 	github.com/pandodao/tokenizer-go v0.2.0
@@ -14,6 +10,8 @@ require (
 )
 
 require (
+	github.com/bits-and-blooms/bitset v1.14.2 // indirect
+	github.com/bits-and-blooms/bloom/v3 v3.7.0 // indirect
 	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

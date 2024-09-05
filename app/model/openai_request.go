@@ -11,6 +11,8 @@ import (
 type OpenaiRequest struct {
 	ID                   int64           `gorm:"column:id;type:integer;autoIncrement:true;primaryKey;index:idx_ids"`
 	ClientID             int64           `gorm:"column:client_id;type:integer;not null;comment:openai_client_id;index:idx_client_ids"`
+	RequestID            string          `gorm:"column:request_id;type:varchar(40);not null;comment:openai_request_id;index:idx_request_ids"`
+	TraceID              string          `gorm:"column:trace_id;type:varchar(40);not null;comment:openai_trace_id;index:idx_trace_ids"`
 	ModelID              int64           `gorm:"column:model_id;type:integer;not null;comment:openai_model_id;index:idx_model_ids"`
 	UserID               int64           `gorm:"column:user_id;type:integer;not null;comment:openai_user_id;index:idx_user_ids"`
 	RequestIP            string          `gorm:"column:request_ip;type:varchar(40);not null;comment:openai_request_ip;index:idx_request_ips"`

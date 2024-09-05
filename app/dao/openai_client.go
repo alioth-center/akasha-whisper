@@ -57,7 +57,18 @@ func (ac *OpenaiClientDatabaseAccessor) GetAvailableClients(ctx context.Context,
 	return clients, nil
 }
 
-func (ac *OpenaiClientDatabaseAccessor) GetClientSecret(ctx context.Context, clientIDs ...int) (result []*dto.ClientSecretDTO, err error) {
+func (ac *OpenaiClientDatabaseAccessor) GetClientSecret(ctx context.Context, clientID int) (result *dto.ClientSecretDTO, err error) {
+	result = new(dto.ClientSecretDTO)
+	sql := rawSqlList[RawsqlOpenaiClientGetClientSecrets]
+	template := &dto.GetClientSecretCND{ClientIDs: []int{clientID}}
+	if queryErr := ac.db.ExecuteRawSqlTemplateQuery(ctx, &result, sql, template); queryErr != nil {
+		return nil, errors.Wrap(queryErr, "get client secret failed")
+	}
+
+	return result, nil
+}
+
+func (ac *OpenaiClientDatabaseAccessor) GetClientSecrets(ctx context.Context, clientIDs ...int) (result []*dto.ClientSecretDTO, err error) {
 	if len(clientIDs) == 0 {
 		return []*dto.ClientSecretDTO{}, nil
 	}
@@ -66,7 +77,17 @@ func (ac *OpenaiClientDatabaseAccessor) GetClientSecret(ctx context.Context, cli
 	sql := rawSqlList[RawsqlOpenaiClientGetClientSecrets]
 	template := &dto.GetClientSecretCND{ClientIDs: clientIDs}
 	if queryErr := ac.db.ExecuteRawSqlTemplateQuery(ctx, &result, sql, template); queryErr != nil {
-		return nil, errors.Wrap(queryErr, "get client secret failed")
+		return nil, errors.Wrap(queryErr, "get client secrets failed")
+	}
+
+	return result, nil
+}
+
+func (ac *OpenaiClientDatabaseAccessor) ListClients(ctx context.Context) (clients []*dto.ListClientDTO, err error) {
+	result := make([]*dto.ListClientDTO, 0)
+	sql := rawSqlList[RawsqlOpenaiClientListClients]
+	if queryErr := ac.db.GetGormCore(ctx).Raw(sql).Scan(&result).Error; queryErr != nil {
+		return nil, errors.Wrap(queryErr, "list clients failed")
 	}
 
 	return result, nil

@@ -31,10 +31,10 @@ func (ac *OpenaiClientBalanceDatabaseAccessor) CreateBalanceRecord(ctx context.C
 			Where(model.OpenaiClientBalanceCols.ClientID, clientID).
 			Select(model.OpenaiClientBalanceCols.BalanceRemaining).
 			Order(clause.OrderByColumn{Column: clause.Column{Name: model.OpenaiClientBalanceCols.CreatedAt}, Desc: true}).
-			First(receiver).
+			Scan(&receiver).
 			Error; queryErr != nil && !errors.Is(queryErr, gorm.ErrRecordNotFound) {
 			return queryErr
-		} else if errors.Is(queryErr, gorm.ErrRecordNotFound) {
+		} else if receiver.ID == 0 {
 			receiver.BalanceRemaining = decimal.Zero
 		}
 

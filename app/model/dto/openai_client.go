@@ -44,8 +44,8 @@ func (cnd *GetClientSecretCND) ParseTemplate(tmpl string) string {
 }
 
 type AvailableClientDTO struct {
-	ClientID             string          `gorm:"column:client_id"`
-	ClientWeight         int             `gorm:"column:client_weight"`
+	ClientID             int             `gorm:"column:client_id"`
+	ClientWeight         int64           `gorm:"column:client_weight"`
 	ClientBalance        decimal.Decimal `gorm:"column:client_balance"`
 	UserID               int             `gorm:"column:user_id"`
 	UserBalance          decimal.Decimal `gorm:"column:user_balance"`
@@ -63,4 +63,13 @@ type ClientSecretDTO struct {
 	ClientEndpoint string          `gorm:"column:endpoint"`
 	ClientWeight   int             `gorm:"column:weight"`
 	ClientBalance  decimal.Decimal `gorm:"column:balance"`
+}
+
+type ListClientDTO struct {
+	ClientID          int             `gorm:"column:id"`
+	ClientDescription string          `gorm:"column:description"`
+	ClientKey         string          `gorm:"column:api_key"`
+	ClientEndpoint    string          `gorm:"column:endpoint"`
+	ClientWeight      int             `gorm:"column:weight"`
+	ClientBalance     decimal.Decimal `gorm:"column:balance"`
 }
