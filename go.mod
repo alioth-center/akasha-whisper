@@ -3,15 +3,17 @@ module github.com/alioth-center/akasha-whisper
 go 1.22.4
 
 require (
-	github.com/alioth-center/infrastructure v1.2.18-0.20240904062837-143265601fe0
+	github.com/alioth-center/infrastructure v1.2.18
+	github.com/bits-and-blooms/bloom/v3 v3.7.0
+	github.com/gin-gonic/gin v1.10.0
 	github.com/pandodao/tokenizer-go v0.2.0
 	github.com/pkg/errors v0.9.1
+	github.com/shopspring/decimal v1.4.0
 	gorm.io/gorm v1.25.10
 )
 
 require (
 	github.com/bits-and-blooms/bitset v1.14.2 // indirect
-	github.com/bits-and-blooms/bloom/v3 v3.7.0 // indirect
 	github.com/bytedance/sonic v1.11.9 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -21,7 +23,6 @@ require (
 	github.com/dop251/goja_nodejs v0.0.0-20240418154818-2aae10d4cbcf // indirect
 	github.com/gabriel-vasile/mimetype v1.4.4 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.10.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.22.0 // indirect
@@ -44,7 +45,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.8.0 // indirect
