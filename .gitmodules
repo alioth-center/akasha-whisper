@@ -1,0 +1,3 @@
+[submodule "frontend/management"]
+	path = frontend/management
+	url = git@github.com:alioth-center/akasha-whisper-management.git
