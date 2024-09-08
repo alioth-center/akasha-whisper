@@ -18,6 +18,7 @@ const (
 	RawsqlOpenaiClientGetAvailableClients RawsqlKey = "openai_client.get_available_clients.sql"
 	RawsqlOpenaiClientGetClientSecrets    RawsqlKey = "openai_client.get_client_secrets.sql"
 	RawsqlOpenaiClientListClients         RawsqlKey = "openai_client.list_clients.sql"
+	RawsqlWhisperUserGetUserInfo          RawsqlKey = "whisper_user.get_user_info.sql"
 )
 
 var (
@@ -25,6 +26,7 @@ var (
 		RawsqlOpenaiClientGetAvailableClients,
 		RawsqlOpenaiClientGetClientSecrets,
 		RawsqlOpenaiClientListClients,
+		RawsqlWhisperUserGetUserInfo,
 	}
 )
 

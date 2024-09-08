@@ -19,15 +19,15 @@ type ClientItem struct {
 }
 
 type CreateClientRequest struct {
-	Name     string `json:"name"`
-	ApiKey   string `json:"api_key"`
-	Endpoint string `json:"endpoint"`
-	Weight   int    `json:"weight"`
+	Name     string `json:"name" vc:"key:name,required"`
+	ApiKey   string `json:"api_key" vc:"key:api_key,required"`
+	Endpoint string `json:"endpoint" vc:"key:endpoint,required"`
+	Weight   int    `json:"weight" vc:"key:weight,required"`
 }
 
-type CreateClientResponse = http.BaseResponse[[]*CreateClientModelItem]
+type CreateClientResponse = http.BaseResponse[[]*CreateClientScanModelItem]
 
-type CreateClientModelItem struct {
+type CreateClientScanModelItem struct {
 	ModelName string `json:"model_name"`
 	CreatedAt int64  `json:"created_at"`
 }

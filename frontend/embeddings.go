@@ -3,6 +3,6 @@ package frontend
 import "embed"
 
 var (
-	//go:embed management/*
+	//go:embed management/dist/*
 	ManagementModule embed.FS
 )

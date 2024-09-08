@@ -27,4 +27,18 @@ var ManagementRouterGroup = []http.EndPointInterface{
 		SetAllowMethods(http.POST).
 		SetRouter(managementRouter.Group("clients")).
 		Build(),
+	http.NewEndPointBuilder[*entity.ListClientModelRequest, *entity.ListClientModelResponse]().
+		SetNecessaryHeaders(http.HeaderAuthorization).
+		SetNecessaryParams("client_name").
+		SetHandlerChain(api.ManagementApi.ListClientModels()).
+		SetAllowMethods(http.GET).
+		SetRouter(managementRouter.Group("client/:client_name/models")).
+		Build(),
+	http.NewEndPointBuilder[*entity.CreateClientModelRequest, *entity.CreateClientModelResponse]().
+		SetNecessaryHeaders(http.HeaderAuthorization).
+		SetNecessaryParams("client_name").
+		SetHandlerChain(api.ManagementApi.CreateClientModels()).
+		SetAllowMethods(http.POST).
+		SetRouter(managementRouter.Group("client/:client_name/models")).
+		Build(),
 }

@@ -220,7 +220,7 @@ func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModels(ctx context.Context,
 	return ac.db.CreateDataOnDuplicateKeyUpdate(ctx, updates, indexKeys, updateKeys)
 }
 
-func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModelWithClientDescriptions(ctx context.Context, modelData *model.OpenaiModel, descriptions ...string) (err error) {
+func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModelWithClientDescriptions(ctx context.Context, modelData []*model.OpenaiModel, descriptions ...string) (err error) {
 	return ac.db.GetGormCore(ctx).Transaction(func(tx *gorm.DB) error {
 		clientIDs := make([]int, 0, len(descriptions))
 		queryErr := tx.WithContext(ctx).
@@ -234,15 +234,17 @@ func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModelWithClientDescriptions
 
 		updates := make([]*model.OpenaiModel, 0, len(clientIDs))
 		for _, client := range clientIDs {
-			updates = append(updates, &model.OpenaiModel{
-				ClientID:        int64(client),
-				Model:           modelData.Model,
-				MaxTokens:       modelData.MaxTokens,
-				PromptPrice:     modelData.PromptPrice,
-				CompletionPrice: modelData.CompletionPrice,
-				RpmLimit:        modelData.RpmLimit,
-				TpmLimit:        modelData.TpmLimit,
-			})
+			for _, modelItem := range modelData {
+				updates = append(updates, &model.OpenaiModel{
+					ClientID:        int64(client),
+					Model:           modelItem.Model,
+					MaxTokens:       modelItem.MaxTokens,
+					PromptPrice:     modelItem.PromptPrice,
+					CompletionPrice: modelItem.CompletionPrice,
+					RpmLimit:        modelItem.RpmLimit,
+					TpmLimit:        modelItem.TpmLimit,
+				})
+			}
 		}
 
 		indexKeys := []string{model.OpenaiModelCols.ClientID, model.OpenaiModelCols.Model}
