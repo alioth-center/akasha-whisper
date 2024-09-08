@@ -5,7 +5,10 @@ import (
 	"github.com/alioth-center/akasha-whisper/app/dao"
 	"github.com/alioth-center/akasha-whisper/app/model"
 	"github.com/alioth-center/infrastructure/config"
+	acdb "github.com/alioth-center/infrastructure/database"
+	"github.com/alioth-center/infrastructure/database/mysql"
 	"github.com/alioth-center/infrastructure/database/postgres"
+	"github.com/alioth-center/infrastructure/database/sqlite"
 	"github.com/alioth-center/infrastructure/logger"
 	"github.com/alioth-center/infrastructure/thirdparty/openai"
 	"github.com/alioth-center/infrastructure/trace"
@@ -72,10 +75,51 @@ func initializeLogger() {
 }
 
 func initializeDatabase() {
-	database, initErr := postgres.NewPostgresSQLv2(Config.Database, syncModels...)
-	if initErr != nil {
-		panic(initErr)
+	var database acdb.DatabaseV2
+	switch Config.Database.Driver {
+	case postgres.DriverName:
+		pgCfg := postgres.Config{
+			Host:      Config.Database.Host,
+			Port:      Config.Database.Port,
+			Username:  Config.Database.Username,
+			Password:  Config.Database.Password,
+			Database:  Config.Database.Database,
+			EnableSSL: Config.Database.SSL,
+		}
+		pgDB, initErr := postgres.NewPostgresSQLv2(pgCfg, syncModels...)
+		if initErr != nil {
+			panic(initErr)
+		}
+
+		database = pgDB
+	case mysql.DriverName:
+		mysqlCfg := mysql.Config{
+			Server:   Config.Database.Host,
+			Port:     Config.Database.Port,
+			Username: Config.Database.Username,
+			Password: Config.Database.Password,
+			Database: Config.Database.Database,
+		}
+		mysqlDB, initErr := mysql.NewMySQLv2(mysqlCfg, syncModels...)
+		if initErr != nil {
+			panic(initErr)
+		}
+
+		database = mysqlDB
+	case sqlite.DriverName:
+		sqliteCfg := sqlite.Config{
+			Database: "./data/akasha_whisper.db",
+		}
+		sqliteDB, initErr := sqlite.NewSQLiteV2(sqliteCfg, syncModels...)
+		if initErr != nil {
+			panic(initErr)
+		}
+
+		database = sqliteDB
+	default:
+		panic("unsupported database driver")
 	}
+
 	DatabaseInstance = database
 	OpenaiClientDatabaseInstance = dao.NewOpenaiClientDatabaseAccessor(database)
 	OpenaiClientBalanceDatabaseInstance = dao.NewOpenaiClientBalanceDatabaseAccessor(database)
@@ -83,6 +127,8 @@ func initializeDatabase() {
 	OpenaiRequestDatabaseInstance = dao.NewOpenaiRequestDatabaseAccessor(database)
 	WhisperUserDatabaseInstance = dao.NewWhisperUserDatabaseAccessor(database)
 	WhisperUserBalanceDatabaseInstance = dao.NewWhisperUserBalanceDatabaseAccessor(database)
+
+	dao.LoadRawSqlList(Config.Database.Driver)
 }
 
 func initializeCache() {

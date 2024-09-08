@@ -5,11 +5,6 @@ import (
 	"github.com/alioth-center/infrastructure/network/http"
 )
 
-func init() {
-	go serveBackend()
-	go serveFrontend()
-}
-
 func serveBackend() {
 	engine := http.NewEngine(global.Config.HttpEngine.ServeURL)
 
@@ -21,4 +16,9 @@ func serveBackend() {
 
 func serveFrontend() {
 	// todo: serve frontend
+}
+
+func init() {
+	go serveBackend()
+	go serveFrontend()
 }

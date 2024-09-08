@@ -1,14 +1,12 @@
 package global
 
-import "github.com/alioth-center/infrastructure/database/postgres"
-
 var Config WhisperConfig
 
 type WhisperConfig struct {
 	HttpEngine  HttpEngineConfig  `yaml:"http_engine"`
 	Logger      LogConfig         `yaml:"logger"`
 	BloomFilter BloomFilterConfig `yaml:"bloom_filter"`
-	Database    postgres.Config   `yaml:"database"`
+	Database    DatabaseConfig    `yaml:"database"`
 	App         AppConfig         `yaml:"app"`
 }
 
@@ -33,4 +31,14 @@ type LogConfig struct {
 type AppConfig struct {
 	MaxToken        int    `yaml:"max_token"`
 	ManagementToken string `yaml:"management_token"`
+}
+
+type DatabaseConfig struct {
+	Driver   string `yaml:"driver"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
+	SSL      bool   `yaml:"ssl"`
 }

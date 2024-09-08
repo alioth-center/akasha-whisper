@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	//go:embed rawsql/*.sql
+	//go:embed rawsql/*
 	rawSqlEmbedding embed.FS
 
 	rawSqlList = map[RawsqlKey]string{}
@@ -30,10 +30,11 @@ var (
 	}
 )
 
-func init() {
-	// load rawsql list
+func LoadRawSqlList(driverName string) {
+	// load rawsql list, format is rawsql/{driver}/{sql_file}
+	prefix := values.BuildStrings("rawsql/", driverName, "/")
 	for _, name := range rawSqlNames {
-		content, readErr := rawSqlEmbedding.ReadFile(values.BuildStrings("rawsql/", string(name)))
+		content, readErr := rawSqlEmbedding.ReadFile(values.BuildStrings(prefix, string(name)))
 		if readErr != nil {
 			panic(readErr)
 		}
