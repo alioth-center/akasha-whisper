@@ -23,10 +23,11 @@ type BloomFilterConfig struct {
 }
 
 type LogConfig struct {
-	LogToFile    bool   `yaml:"log_to_file"`
-	LogSplit     bool   `yaml:"log_split"`
-	LogDirectory string `yaml:"log_directory"`
-	LogLevel     string `yaml:"log_level"`
+	LogToFile     bool   `yaml:"log_to_file"`
+	LogSplit      bool   `yaml:"log_split"`
+	LogDirectory  string `yaml:"log_directory"`
+	LogLevel      string `yaml:"log_level"`
+	LogFileSuffix string `yaml:"log_file_suffix"`
 }
 
 type AppConfig struct {

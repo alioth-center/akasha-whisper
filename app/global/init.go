@@ -53,6 +53,9 @@ func initializeConfig() {
 }
 
 func initializeLogger() {
+	if Config.Logger.LogFileSuffix == "" {
+		Config.Logger.LogFileSuffix = "_akasha_whisper_logs_stdout.jsonl"
+	}
 	switch {
 	case !Config.Logger.LogToFile:
 		Logger = logger.NewCustomLoggerWithOpts(
@@ -61,14 +64,14 @@ func initializeLogger() {
 	case !Config.Logger.LogSplit:
 		Logger = logger.NewCustomLoggerWithOpts(
 			logger.WithLevelOpts(logger.Level(Config.Logger.LogLevel)),
-			logger.WithFileWriterOpts(filepath.Join(Config.Logger.LogDirectory, "akasha_whisper_log.jsonl")),
+			logger.WithFileWriterOpts(filepath.Join(Config.Logger.LogDirectory, Config.Logger.LogFileSuffix)),
 		)
 	default:
 		Logger = logger.NewCustomLoggerWithOpts(
 			logger.WithLevelOpts(logger.Level(Config.Logger.LogLevel)),
 			logger.WithCustomWriterOpts(
 				logger.NewTimeBasedRotationFileWriter(Config.Logger.LogDirectory, func(time time.Time) (filename string) {
-					return values.BuildStrings(time.Format("2006-01-02"), "_akasha_whisper_log.jsonl")
+					return values.BuildStrings(time.Format("2006-01-02"), Config.Logger.LogFileSuffix)
 				}),
 			),
 		)

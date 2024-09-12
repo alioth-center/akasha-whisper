@@ -4,9 +4,10 @@ http_engine:
   enable_management_apis: true # enable management apis, if set to false or unset, management apis will not serve
 logger:
   log_to_file: true # log to file, set to false means log to stdout
-  log_split: true # split log file by day
+  log_split: true # split log file by day, log file name will be like '2021-01-01_akasha_whisper_logs_stdout.jsonl'
   log_directory: './log' # log directory, must be created before starting, or it will panic the program
   log_level: 'info' # enum: debug, info, warn, error, panic, fatal
+  log_file_suffix: '_stdout.jsonl' # log file suffix, must start with '_' and end with extension, default is '_akasha_whisper_logs_stdout.jsonl'
 bloom_filter:
   enable: true # enable bloom filter
   filter_size: 1000000 # bloom filter size
