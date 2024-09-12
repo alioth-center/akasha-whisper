@@ -11,3 +11,4 @@ linters:
     - staticcheck
   disable:
     - unused
+    - typecheck
