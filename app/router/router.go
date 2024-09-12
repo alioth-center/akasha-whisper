@@ -17,11 +17,6 @@ func serveBackend() {
 	engine.ServeAsync(global.Config.HttpEngine.ServeAddr, make(chan struct{}, 1))
 }
 
-func serveFrontend() {
-	// todo: serve frontend
-}
-
 func init() {
 	go serveBackend()
-	go serveFrontend()
 }
