@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+
 	"github.com/alioth-center/akasha-whisper/app/model"
 	"github.com/alioth-center/infrastructure/database"
 	"github.com/pkg/errors"
@@ -45,6 +46,56 @@ func (ac *OpenaiClientBalanceDatabaseAccessor) CreateBalanceRecord(ctx context.C
 			BalanceRemaining:    after,
 			Action:              action,
 			Reason:              recordReason,
+		}
+
+		if createErr := tx.WithContext(ctx).Create(record).Error; createErr != nil {
+			return createErr
+		}
+
+		return nil
+	})
+	if execErr != nil {
+		return decimal.Zero, execErr
+	}
+
+	return after, nil
+}
+
+func (ac *OpenaiClientBalanceDatabaseAccessor) CreateBalanceRecordByName(ctx context.Context, clientName string, changeAmount decimal.Decimal, action model.EnumOpenaiClientBalanceAction, reason string) (after decimal.Decimal, err error) {
+	execErr := ac.db.GetGormCore(ctx).Transaction(func(tx *gorm.DB) error {
+		var clientID int64
+		if queryErr := tx.WithContext(ctx).
+			Model(&model.OpenaiClient{}).
+			Where(model.OpenaiClientCols.Description, clientName).
+			Select(model.OpenaiClientCols.ID).
+			Scan(&clientID).
+			Error; queryErr != nil {
+			return queryErr
+		}
+		if clientID == 0 {
+			return errors.New("client not found")
+		}
+
+		receiver := &model.OpenaiClientBalance{}
+		if queryErr := tx.WithContext(ctx).
+			Model(&model.OpenaiClientBalance{}).
+			Where(model.OpenaiClientBalanceCols.ClientID, clientID).
+			Select(model.OpenaiClientBalanceCols.BalanceRemaining).
+			Order(clause.OrderByColumn{Column: clause.Column{Name: model.OpenaiClientBalanceCols.CreatedAt}, Desc: true}).
+			Scan(&receiver).
+			Error; queryErr != nil && !errors.Is(queryErr, gorm.ErrRecordNotFound) {
+			return queryErr
+		} else if receiver.ID == 0 {
+			receiver.BalanceRemaining = decimal.Zero
+		}
+
+		after = receiver.BalanceRemaining.Add(changeAmount)
+		record := &model.OpenaiClientBalance{
+			ClientID:            int64(clientID),
+			BalanceChangeAmount: changeAmount,
+			BalanceRemaining:    after,
+			Action:              action,
+			Reason:              reason,
 		}
 
 		if createErr := tx.WithContext(ctx).Create(record).Error; createErr != nil {

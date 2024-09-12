@@ -2,6 +2,7 @@ package dao
 
 import (
 	"embed"
+
 	"github.com/alioth-center/infrastructure/utils/values"
 )
 
@@ -21,14 +22,12 @@ const (
 	RawsqlWhisperUserGetUserInfo          RawsqlKey = "whisper_user.get_user_info.sql"
 )
 
-var (
-	rawSqlNames = []RawsqlKey{
-		RawsqlOpenaiClientGetAvailableClients,
-		RawsqlOpenaiClientGetClientSecrets,
-		RawsqlOpenaiClientListClients,
-		RawsqlWhisperUserGetUserInfo,
-	}
-)
+var rawSqlNames = []RawsqlKey{
+	RawsqlOpenaiClientGetAvailableClients,
+	RawsqlOpenaiClientGetClientSecrets,
+	RawsqlOpenaiClientListClients,
+	RawsqlWhisperUserGetUserInfo,
+}
 
 func LoadRawSqlList(driverName string) {
 	// load rawsql list, format is rawsql/{driver}/{sql_file}

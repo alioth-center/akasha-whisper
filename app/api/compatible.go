@@ -19,3 +19,7 @@ func (impl compatibleApiImpl) CompleteChat() http.Chain[*openai.CompleteChatRequ
 func (impl compatibleApiImpl) ListModel() http.Chain[*openai.ListModelRequest, *openai.ListModelResponseBody] {
 	return http.NewChain(impl.service.ListModelAuthorize, impl.service.ListModel)
 }
+
+func (impl compatibleApiImpl) CreateSpeech() http.Chain[*openai.CreateSpeechRequestBody, *openai.CreateSpeechResponseBody] {
+	return http.NewChain(impl.service.CreateSpeechAuthorize, impl.service.CreateSpeech)
+}

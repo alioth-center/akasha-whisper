@@ -2,6 +2,9 @@ package global
 
 import (
 	"context"
+	"path/filepath"
+	"time"
+
 	"github.com/alioth-center/akasha-whisper/app/dao"
 	"github.com/alioth-center/akasha-whisper/app/model"
 	"github.com/alioth-center/infrastructure/config"
@@ -15,8 +18,6 @@ import (
 	"github.com/alioth-center/infrastructure/utils/concurrency"
 	"github.com/alioth-center/infrastructure/utils/values"
 	"github.com/bits-and-blooms/bloom/v3"
-	"path/filepath"
-	"time"
 )
 
 var syncModels = []any{
@@ -127,6 +128,7 @@ func initializeDatabase() {
 	OpenaiRequestDatabaseInstance = dao.NewOpenaiRequestDatabaseAccessor(database)
 	WhisperUserDatabaseInstance = dao.NewWhisperUserDatabaseAccessor(database)
 	WhisperUserBalanceDatabaseInstance = dao.NewWhisperUserBalanceDatabaseAccessor(database)
+	WhisperUserPermissionDatabaseInstance = dao.NewWhisperUserPermissionDatabaseAccessor(database)
 
 	dao.LoadRawSqlList(Config.Database.Driver)
 }

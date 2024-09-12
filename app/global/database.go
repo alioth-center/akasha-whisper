@@ -8,10 +8,11 @@ import (
 var (
 	DatabaseInstance database.DatabaseV2
 
-	OpenaiClientDatabaseInstance        *dao.OpenaiClientDatabaseAccessor
-	OpenaiClientBalanceDatabaseInstance *dao.OpenaiClientBalanceDatabaseAccessor
-	OpenaiModelDatabaseInstance         *dao.OpenaiModelDatabaseAccessor
-	OpenaiRequestDatabaseInstance       *dao.OpenaiRequestDatabaseAccessor
-	WhisperUserDatabaseInstance         *dao.WhisperUserDatabaseAccessor
-	WhisperUserBalanceDatabaseInstance  *dao.WhisperUserBalanceDatabaseAccessor
+	OpenaiClientDatabaseInstance          *dao.OpenaiClientDatabaseAccessor
+	OpenaiClientBalanceDatabaseInstance   *dao.OpenaiClientBalanceDatabaseAccessor
+	OpenaiModelDatabaseInstance           *dao.OpenaiModelDatabaseAccessor
+	OpenaiRequestDatabaseInstance         *dao.OpenaiRequestDatabaseAccessor
+	WhisperUserDatabaseInstance           *dao.WhisperUserDatabaseAccessor
+	WhisperUserBalanceDatabaseInstance    *dao.WhisperUserBalanceDatabaseAccessor
+	WhisperUserPermissionDatabaseInstance *dao.WhisperUserPermissionDatabaseAccessor
 )

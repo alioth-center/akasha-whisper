@@ -2,27 +2,43 @@ package service
 
 import (
 	"context"
+	"strings"
+
 	"github.com/alioth-center/akasha-whisper/app/global"
 	"github.com/alioth-center/akasha-whisper/app/model/dto"
 	"github.com/alioth-center/infrastructure/logger"
 	"github.com/alioth-center/infrastructure/thirdparty/openai"
+	"github.com/alioth-center/infrastructure/utils/network"
 	"github.com/alioth-center/infrastructure/utils/values"
 	"github.com/pandodao/tokenizer-go"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
-	"strings"
 )
 
-func CheckApiKeyAvailable(ctx context.Context, key string) (bool, error) {
+func CheckApiKeyAvailable(ctx context.Context, key string) (exist bool, allowIPs string, err error) {
 	token := strings.TrimPrefix(key, "Bearer ")
 
 	// check from bloom filter first
 	if token == "" || !global.BearerTokenBloomFilterInstance.CheckKey(token) {
-		return false, nil
+		return false, "", nil
 	}
 
 	// check from database
 	return global.WhisperUserDatabaseInstance.CheckWhisperUserApiKey(ctx, token)
+}
+
+func CheckAllowIP(_ context.Context, ip string, allowIPs []string) bool {
+	if len(allowIPs) == 0 || (len(allowIPs) == 1 && allowIPs[0] == "") {
+		return true
+	}
+
+	return len(values.FilterArray(allowIPs, func(cidr string) bool {
+		if network.IsValidIP(cidr) {
+			return ip == cidr
+		}
+
+		return network.IPInCIDR(ip, cidr)
+	})) > 0
 }
 
 func GetAvailableClient(ctx context.Context, key string, modelName string, promptToken int64) (client openai.Client, metadata *dto.AvailableClientDTO, err error) {
@@ -36,7 +52,7 @@ func GetAvailableClient(ctx context.Context, key string, modelName string, promp
 
 	// filter clients, only return clients that have enough balance
 	values.FilterArray(clients, func(client *dto.AvailableClientDTO) bool {
-		promptPrice := client.ModelPromptPrice.Mul(decimal.NewFromInt(promptToken))
+		promptPrice := client.ModelPromptPrice.Mul(decimal.NewFromInt(promptToken)).Div(decimal.NewFromInt(global.Config.App.PriceTokenUnit))
 		affordable := client.ClientBalance.GreaterThanOrEqual(promptPrice) && client.UserBalance.GreaterThanOrEqual(promptPrice)
 
 		if affordable {
@@ -63,7 +79,7 @@ func GetAvailableClient(ctx context.Context, key string, modelName string, promp
 		// lazy initialize openai client
 		secret, querySecretErr := global.OpenaiClientDatabaseInstance.GetClientSecret(ctx, effectiveClient.ClientID)
 		if querySecretErr != nil {
-			global.Logger.Info(logger.NewFields(ctx).WithMessage("query client secret failed").WithData(map[string]any{"metadata": effectiveClient, "error": querySecretErr}))
+			global.Logger.Error(logger.NewFields(ctx).WithMessage("query client secret failed").WithData(map[string]any{"metadata": effectiveClient, "error": querySecretErr}))
 			return nil, nil, querySecretErr
 		}
 
@@ -73,6 +89,7 @@ func GetAvailableClient(ctx context.Context, key string, modelName string, promp
 		}
 		openaiClient = openai.NewClient(openaiClientConfig, global.Logger)
 		global.OpenaiClientCacheInstance.Set(effectiveClient.ClientID, openaiClient)
+		global.Logger.Info(logger.NewFields(ctx).WithMessage("openai client initialized").WithData(map[string]any{"metadata": effectiveClient, "client": openaiClient}))
 	}
 
 	return openaiClient, effectiveClient, nil
@@ -86,7 +103,7 @@ func CalculatePromptToken(inputs ...string) (promptToken int64) {
 	return promptToken
 }
 
-func CheckManagementKeyAvailable(ctx context.Context, key string) bool {
+func CheckManagementKeyAvailable(_ context.Context, key string) bool {
 	token := strings.TrimPrefix(key, "Bearer ")
 
 	if token == "" || global.Config.App.ManagementToken != token {
@@ -97,6 +114,4 @@ func CheckManagementKeyAvailable(ctx context.Context, key string) bool {
 	return true
 }
 
-var (
-	ErrorNoAvailableClient = errors.New("no available client")
-)
+var ErrorNoAvailableClient = errors.New("no available client")

@@ -1,6 +1,7 @@
 http_engine:
   serve_url: '/v1' # serve url, must start with '/' and end without '/'
   serve_addr: '0.0.0.0:10000' # serve address, must be ip:port
+  enable_management_apis: true # enable management apis, if set to false or unset, management apis will not serve
 logger:
   log_to_file: true # log to file, set to false means log to stdout
   log_split: true # split log file by day
@@ -20,3 +21,4 @@ database:
 app:
   max_token: 128000 # global max token, must be greater than 0
   management_token: 'your_management_token' # management token, must be set, empty means disable management apis
+  price_token_unit: 1000 # price token unit, must be greater than 0, means if $5 = 1M tokens, your price_token_unit = 1000000, and prompt_price or completion_price = 5

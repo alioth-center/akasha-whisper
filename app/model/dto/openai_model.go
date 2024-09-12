@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"github.com/shopspring/decimal"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type RelatedModelDTO struct {
@@ -14,4 +15,11 @@ type RelatedModelDTO struct {
 	LastUpdatedAt   time.Time       `gorm:"column:last_updated_at"`
 	PromptPrice     decimal.Decimal `gorm:"column:model_prompt_price"`
 	CompletionPrice decimal.Decimal `gorm:"column:model_completion_price"`
+}
+
+type ClientModelDTO struct {
+	ClientID   int    `gorm:"column:client_id"`
+	ClientName string `gorm:"column:client_name"`
+	ModelID    int    `gorm:"column:model_id"`
+	ModelName  string `gorm:"column:model_name"`
 }

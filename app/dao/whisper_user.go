@@ -2,9 +2,11 @@ package dao
 
 import (
 	"context"
+
 	"github.com/alioth-center/akasha-whisper/app/model"
 	"github.com/alioth-center/akasha-whisper/app/model/dto"
 	"github.com/alioth-center/infrastructure/database"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -17,17 +19,37 @@ func NewWhisperUserDatabaseAccessor(db database.DatabaseV2) *WhisperUserDatabase
 	return &WhisperUserDatabaseAccessor{db: db}
 }
 
-func (ac *WhisperUserDatabaseAccessor) CheckWhisperUserApiKey(ctx context.Context, apiKey string) (bool, error) {
-	var count int64
-	if queryErr := ac.db.GetGormCore(ctx).
+func (ac *WhisperUserDatabaseAccessor) CheckWhisperUserApiKey(ctx context.Context, apiKey string) (exist bool, allowIPs string, err error) {
+	user := new(model.WhisperUser)
+	queryErr := ac.db.GetGormCore(ctx).
 		Model(&model.WhisperUser{}).
 		Where(model.WhisperUserCols.ApiKey, apiKey).
-		Count(&count).
-		Error; queryErr != nil {
-		return false, queryErr
+		Select(model.WhisperUserCols.AllowIps).
+		First(user).
+		Error
+	if queryErr == nil {
+		return true, user.AllowIps, nil
+	}
+	if errors.Is(queryErr, gorm.ErrRecordNotFound) {
+		return false, "", nil
 	}
 
-	return count > 0, nil
+	return false, "", queryErr
+}
+
+func (ac *WhisperUserDatabaseAccessor) ListWhisperUsers(ctx context.Context, page, limit int) ([]model.WhisperUser, error) {
+	users := make([]model.WhisperUser, 0)
+	if queryErr := ac.db.GetGormCore(ctx).
+		Model(&model.WhisperUser{}).
+		Select(model.WhisperUserCols.ID, model.WhisperUserCols.ApiKey, model.WhisperUserCols.Email, model.WhisperUserCols.Language, model.WhisperUserCols.AllowIps).
+		Offset(page * limit).
+		Limit(limit).
+		Scan(&users).
+		Error; queryErr != nil {
+		return nil, queryErr
+	}
+
+	return users, nil
 }
 
 func (ac *WhisperUserDatabaseAccessor) ListWhisperUserApiKeys(ctx context.Context) ([]string, error) {
@@ -47,7 +69,7 @@ func (ac *WhisperUserDatabaseAccessor) CreateWhisperUser(ctx context.Context, us
 	return ac.db.CreateSingleDataIfNotExist(ctx, user)
 }
 
-func (ac *WhisperUserDatabaseAccessor) GetWhisperUserInfo(ctx context.Context, userID string) (user *dto.WhisperUserInfo, err error) {
+func (ac *WhisperUserDatabaseAccessor) GetWhisperUserInfo(ctx context.Context, userID int) (user *dto.WhisperUserInfo, err error) {
 	user = new(dto.WhisperUserInfo)
 	return user, ac.db.GetGormCore(ctx).Transaction(func(tx *gorm.DB) error {
 		// select om.model as model_name
@@ -103,4 +125,8 @@ func (ac *WhisperUserDatabaseAccessor) GetWhisperUserInfo(ctx context.Context, u
 		user.Models = models
 		return nil
 	})
+}
+
+func (ac *WhisperUserDatabaseAccessor) UpdateWhisperUser(ctx context.Context, user *model.WhisperUser) error {
+	return ac.db.UpdateDataBySingleCondition(ctx, user, model.WhisperUserCols.ID, user.ID)
 }

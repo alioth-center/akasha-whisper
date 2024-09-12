@@ -11,8 +11,9 @@ type WhisperConfig struct {
 }
 
 type HttpEngineConfig struct {
-	ServeURL  string `yaml:"serve_url"`
-	ServeAddr string `yaml:"serve_addr"`
+	ServeURL             string `yaml:"serve_url"`
+	ServeAddr            string `yaml:"serve_addr"`
+	EnableManagementApis bool   `yaml:"enable_management_apis"`
 }
 
 type BloomFilterConfig struct {
@@ -31,6 +32,7 @@ type LogConfig struct {
 type AppConfig struct {
 	MaxToken        int    `yaml:"max_token"`
 	ManagementToken string `yaml:"management_token"`
+	PriceTokenUnit  int64  `yaml:"price_token_unit"`
 }
 
 type DatabaseConfig struct {

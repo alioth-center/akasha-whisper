@@ -19,4 +19,11 @@ var OpenAiCompatibleRouterGroup = []http.EndPointInterface{
 		SetAllowMethods(http.GET).
 		SetRouter(http.NewRouter("/models")).
 		Build(),
+	// yet have some problem which cannot return audio file correctly
+	// http.NewEndPointBuilder[*openai.CreateSpeechRequestBody, *openai.CreateSpeechResponseBody]().
+	// 	SetNecessaryHeaders("Authorization").
+	//	SetHandlerChain(api.CompatibleApi.CreateSpeech()).
+	//	SetAllowMethods(http.POST).
+	//	SetRouter(http.NewRouter("/audio/speech")).
+	//	Build(),
 }

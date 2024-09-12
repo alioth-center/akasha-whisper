@@ -26,6 +26,13 @@ func (impl managementApiImpl) CreateClient() http.Chain[*entity.CreateClientRequ
 	)
 }
 
+func (impl managementApiImpl) ModifyClientBalance() http.Chain[*entity.ModifyOpenaiClientBalanceRequest, *entity.ModifyOpenaiClientBalanceResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.ModifyOpenaiClientBalanceRequest, *entity.ModifyOpenaiClientBalanceResult],
+		impl.service.ModifyClientBalance,
+	)
+}
+
 func (impl managementApiImpl) ListClientModels() http.Chain[*entity.ListClientModelRequest, *entity.ListClientModelResponse] {
 	return http.NewChain(
 		service.CheckManagementKey[*entity.ListClientModelRequest, []*entity.ModelItem],
@@ -37,5 +44,61 @@ func (impl managementApiImpl) CreateClientModels() http.Chain[*entity.CreateClie
 	return http.NewChain(
 		service.CheckManagementKey[*entity.CreateClientModelRequest, *entity.CreateResponse],
 		impl.service.CreateClientModels,
+	)
+}
+
+func (impl managementApiImpl) ListWhisperUsers() http.Chain[*entity.ListWhisperUsersRequest, *entity.ListWhisperUsersResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.ListWhisperUsersRequest, []*entity.WhisperUserResult],
+		impl.service.ListWhisperUsers,
+	)
+}
+
+func (impl managementApiImpl) CreateWhisperUser() http.Chain[*entity.CreateWhisperUserRequest, *entity.CreateWhisperUserResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.CreateWhisperUserRequest, *entity.WhisperUserResult],
+		impl.service.CreateWhisperUser,
+	)
+}
+
+func (impl managementApiImpl) GetWhisperUser() http.Chain[*entity.GetWhisperUserRequest, *entity.GetWhisperUserResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.GetWhisperUserRequest, *entity.WhisperUserInfo],
+		impl.service.GetWhisperUser,
+	)
+}
+
+func (impl managementApiImpl) UpdateWhisperUser() http.Chain[*entity.UpdateWhisperUserRequest, *entity.UpdateWhisperUserResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.UpdateWhisperUserRequest, *entity.WhisperUserResult],
+		impl.service.UpdateWhisperUser,
+	)
+}
+
+func (impl managementApiImpl) ListWhisperUserBalanceLogs() http.Chain[*entity.ListWhisperUserBalanceLogsRequest, *entity.ListWhisperUserBalanceLogsResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.ListWhisperUserBalanceLogsRequest, []*entity.WhisperUserBalanceLog],
+		impl.service.ListWhisperUserBalanceLogs,
+	)
+}
+
+func (impl managementApiImpl) ModifyWhisperUserBalance() http.Chain[*entity.ModifyWhisperUserBalanceRequest, *entity.ModifyWhisperUserBalanceResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.ModifyWhisperUserBalanceRequest, *entity.WhisperUserBalanceLog],
+		impl.service.ModifyWhisperUserBalance,
+	)
+}
+
+func (impl managementApiImpl) BatchModifyWhisperUserBalance() http.Chain[*entity.BatchModifyWhisperUserBalanceRequest, *entity.BatchModifyWhisperUserBalanceResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.BatchModifyWhisperUserBalanceRequest, *entity.BatchModifyWhisperUserBalanceResult],
+		impl.service.BatchModifyWhisperUserBalance,
+	)
+}
+
+func (impl managementApiImpl) ModifyWhisperUserPermissions() http.Chain[*entity.ModifyWhisperUserPermissionRequest, *entity.ModifyWhisperUserPermissionResponse] {
+	return http.NewChain(
+		service.CheckManagementKey[*entity.ModifyWhisperUserPermissionRequest, *entity.ModifyWhisperUserPermissionResult],
+		impl.service.ModifyWhisperUserPermissions,
 	)
 }

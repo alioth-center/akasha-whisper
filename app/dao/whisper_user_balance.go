@@ -2,6 +2,8 @@ package dao
 
 import (
 	"context"
+	"time"
+
 	"github.com/alioth-center/akasha-whisper/app/model"
 	"github.com/alioth-center/infrastructure/database"
 	"github.com/pkg/errors"
@@ -58,4 +60,58 @@ func (ac *WhisperUserBalanceDatabaseAccessor) CreateBalanceRecord(ctx context.Co
 	}
 
 	return after, nil
+}
+
+func (ac *WhisperUserBalanceDatabaseAccessor) ListBalanceRecords(ctx context.Context, userID int, start, end time.Time, page int, offset int) (records []*model.WhisperUserBalance, err error) {
+	list := make([]*model.WhisperUserBalance, 0, page)
+
+	if queryErr := ac.db.GetGormCore(ctx).
+		Model(&model.WhisperUserBalance{}).
+		Where(model.WhisperUserBalanceCols.UserID, userID).
+		Where(clause.Gte{Column: model.WhisperUserBalanceCols.CreatedAt, Value: start}).
+		Where(clause.Lte{Column: model.WhisperUserBalanceCols.CreatedAt, Value: end}).
+		Order(clause.OrderByColumn{Column: clause.Column{Name: model.WhisperUserBalanceCols.CreatedAt}, Desc: true}).
+		Offset(offset * page).
+		Limit(page).
+		Find(&list).
+		Error; queryErr != nil {
+		return nil, queryErr
+	}
+
+	return list, nil
+}
+
+func (ac *WhisperUserBalanceDatabaseAccessor) BatchCreateBalanceRecord(ctx context.Context, userID []int, changeAmount decimal.Decimal, action model.EnumWhisperUserBalanceAction, reason string) error {
+	return ac.db.GetGormCore(ctx).Transaction(func(tx *gorm.DB) error {
+		users := int64(0)
+		if queryErr := tx.WithContext(ctx).
+			Model(&model.WhisperUser{}).
+			Where(model.WhisperUserCols.ID, userID).
+			Select(model.WhisperUserCols.ID).
+			Count(&users).
+			Error; queryErr != nil {
+			return queryErr
+		}
+		if users != int64(len(userID)) {
+			return errors.New("data not consistent")
+		}
+
+		records := make([]model.WhisperUserBalance, 0, len(userID))
+		for _, id := range userID {
+			records = append(records, model.WhisperUserBalance{
+				UserID:              int64(id),
+				BalanceChangeAmount: changeAmount,
+				Action:              action,
+				Reason:              reason,
+			})
+		}
+
+		if createErr := tx.WithContext(ctx).
+			Model(&model.WhisperUserBalance{}).
+			CreateInBatches(records, 100).Error; createErr != nil {
+			return createErr
+		}
+
+		return nil
+	})
 }

@@ -1,10 +1,11 @@
 package dto
 
 import (
-	"github.com/alioth-center/infrastructure/utils/values"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
+
+	"github.com/alioth-center/infrastructure/utils/values"
+	"github.com/shopspring/decimal"
 )
 
 type ClientCheckDTO struct {

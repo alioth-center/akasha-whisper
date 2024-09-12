@@ -2,6 +2,13 @@ package model
 
 import "time"
 
+type WhisperUserRoleEnum = string
+
+const (
+	WhisperUserRoleUser   WhisperUserRoleEnum = "user"
+	WhisperUserRoleClient WhisperUserRoleEnum = "client"
+)
+
 // WhisperUser whisper user
 //
 // Reference: https://docs.alioth.center/akasha-whisper-database.html#whisper-users
