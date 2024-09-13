@@ -90,7 +90,7 @@ func initializeDatabase() {
 			Database:  Config.Database.Database,
 			EnableSSL: Config.Database.SSL,
 		}
-		pgDB, initErr := postgres.NewPostgresSQLv2(pgCfg, syncModels...)
+		pgDB, initErr := postgres.NewWithLogger(pgCfg, Logger, syncModels...)
 		if initErr != nil {
 			panic(initErr)
 		}
@@ -104,7 +104,7 @@ func initializeDatabase() {
 			Password: Config.Database.Password,
 			Database: Config.Database.Database,
 		}
-		mysqlDB, initErr := mysql.NewMySQLv2(mysqlCfg, syncModels...)
+		mysqlDB, initErr := mysql.NewWithLogger(mysqlCfg, Logger, syncModels...)
 		if initErr != nil {
 			panic(initErr)
 		}
@@ -114,7 +114,7 @@ func initializeDatabase() {
 		sqliteCfg := sqlite.Config{
 			Database: "./data/akasha_whisper.db",
 		}
-		sqliteDB, initErr := sqlite.NewSQLiteV2(sqliteCfg, syncModels...)
+		sqliteDB, initErr := sqlite.NewWithLogger(sqliteCfg, Logger, syncModels...)
 		if initErr != nil {
 			panic(initErr)
 		}

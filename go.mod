@@ -3,7 +3,7 @@ module github.com/alioth-center/akasha-whisper
 go 1.22.4
 
 require (
-	github.com/alioth-center/infrastructure v1.2.19-0.20240911085752-65dd6daf97f0
+	github.com/alioth-center/infrastructure v1.2.19-0.20240913025603-1d50932f7b1f
 	github.com/bits-and-blooms/bloom/v3 v3.7.0
 	github.com/pandodao/tokenizer-go v0.2.0
 	github.com/pkg/errors v0.9.1

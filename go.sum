@@ -1,7 +1,8 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/alioth-center/infrastructure v1.2.19-0.20240911085752-65dd6daf97f0 h1:4doIp8bYkhL+7Ymxf7GNtxTNNNVmMOfKr/qWIKSg9pw=
 github.com/alioth-center/infrastructure v1.2.19-0.20240911085752-65dd6daf97f0/go.mod h1:NN+S3dKyPw7A4phkij8jzKG8aHpOqDsPG+/KRvHbAnM=
+github.com/alioth-center/infrastructure v1.2.19-0.20240913025603-1d50932f7b1f h1:Icm1/ykakPK+mD6aa4duRFFSVcwkNdbAjSVmdvQukWE=
+github.com/alioth-center/infrastructure v1.2.19-0.20240913025603-1d50932f7b1f/go.mod h1:NN+S3dKyPw7A4phkij8jzKG8aHpOqDsPG+/KRvHbAnM=
 github.com/bits-and-blooms/bitset v1.10.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/bits-and-blooms/bitset v1.14.2 h1:YXVoyPndbdvcEVcseEovVfp0qjJp7S+i5+xgp/Nfbdc=
 github.com/bits-and-blooms/bitset v1.14.2/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
