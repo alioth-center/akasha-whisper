@@ -19,6 +19,7 @@ database:
   username: 'your_username' # example: root, postgres (empty only for sqlite)
   password: 'your_password' # example: 123456, empty(only for sqlite)
   database: 'your_database' # example: test, empty(only for sqlite)s
+  location: 'UTC' # database location, must be a valid location, default is Asia/Shanghai, if you use docker, set it to UTC
 app:
   max_token: 128000 # global max token, must be greater than 0
   management_token: 'your_management_token' # management token, must be set, empty means disable management apis

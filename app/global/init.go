@@ -88,7 +88,9 @@ func initializeDatabase() {
 			Username:  Config.Database.Username,
 			Password:  Config.Database.Password,
 			Database:  Config.Database.Database,
+			Location:  Config.Database.Location,
 			EnableSSL: Config.Database.SSL,
+			Debug:     false,
 		}
 		pgDB, initErr := postgres.NewWithLogger(pgCfg, Logger, syncModels...)
 		if initErr != nil {
@@ -98,11 +100,13 @@ func initializeDatabase() {
 		database = pgDB
 	case mysql.DriverName:
 		mysqlCfg := mysql.Config{
-			Server:   Config.Database.Host,
-			Port:     Config.Database.Port,
-			Username: Config.Database.Username,
-			Password: Config.Database.Password,
-			Database: Config.Database.Database,
+			Server:    Config.Database.Host,
+			Port:      Config.Database.Port,
+			Username:  Config.Database.Username,
+			Password:  Config.Database.Password,
+			Database:  Config.Database.Database,
+			Location:  Config.Database.Location,
+			ParseTime: Config.Database.Location != "",
 		}
 		mysqlDB, initErr := mysql.NewWithLogger(mysqlCfg, Logger, syncModels...)
 		if initErr != nil {

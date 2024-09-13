@@ -44,4 +44,5 @@ type DatabaseConfig struct {
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 	SSL      bool   `yaml:"ssl"`
+	Location string `yaml:"location"`
 }
