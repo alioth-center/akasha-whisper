@@ -36,10 +36,13 @@ func (ac *WhisperUserBalanceDatabaseAccessor) CreateBalanceRecord(ctx context.Co
 			First(receiver).
 			Error; queryErr != nil && !errors.Is(queryErr, gorm.ErrRecordNotFound) {
 			return queryErr
-		} else if errors.Is(queryErr, gorm.ErrRecordNotFound) {
-			receiver.BalanceRemaining = decimal.Zero
+		} else if errors.Is(queryErr, gorm.ErrRecordNotFound) && action != model.WhisperUserBalanceActionInitial {
+			return errors.New("user balance not initialized")
 		}
 
+		if action == model.WhisperUserBalanceActionInitial {
+			receiver.BalanceRemaining = decimal.Zero
+		}
 		after = receiver.BalanceRemaining.Add(changeAmount)
 		record := &model.WhisperUserBalance{
 			UserID:              int64(userID),

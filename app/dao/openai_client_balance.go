@@ -30,15 +30,18 @@ func (ac *OpenaiClientBalanceDatabaseAccessor) CreateBalanceRecord(ctx context.C
 		if queryErr := tx.WithContext(ctx).
 			Model(&model.OpenaiClientBalance{}).
 			Where(model.OpenaiClientBalanceCols.ClientID, clientID).
-			Select(model.OpenaiClientBalanceCols.BalanceRemaining).
+			Select(model.OpenaiClientBalanceCols.BalanceRemaining, model.OpenaiClientBalanceCols.ID).
 			Order(clause.OrderByColumn{Column: clause.Column{Name: model.OpenaiClientBalanceCols.CreatedAt}, Desc: true}).
 			Scan(&receiver).
-			Error; queryErr != nil && !errors.Is(queryErr, gorm.ErrRecordNotFound) {
+			Error; queryErr != nil {
 			return queryErr
-		} else if receiver.ID == 0 {
-			receiver.BalanceRemaining = decimal.Zero
+		} else if receiver.ID == 0 && action != model.OpenaiClientBalanceActionInitial {
+			return errors.New("client balance not initialized")
 		}
 
+		if action == model.OpenaiClientBalanceActionInitial {
+			receiver.BalanceRemaining = decimal.Zero
+		}
 		after = receiver.BalanceRemaining.Add(changeAmount)
 		record := &model.OpenaiClientBalance{
 			ClientID:            int64(clientID),
