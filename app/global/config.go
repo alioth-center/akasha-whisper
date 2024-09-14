@@ -37,12 +37,13 @@ type AppConfig struct {
 }
 
 type DatabaseConfig struct {
-	Driver   string `yaml:"driver"`
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	Database string `yaml:"database"`
-	SSL      bool   `yaml:"ssl"`
-	Location string `yaml:"location"`
+	Driver     string `yaml:"driver"`
+	Host       string `yaml:"host"`
+	Port       int    `yaml:"port"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	Database   string `yaml:"database"`
+	SSL        bool   `yaml:"ssl"`
+	Location   string `yaml:"location"`
+	SyncModels bool   `yaml:"sync_models"`
 }

@@ -91,7 +91,7 @@ func (ac *WhisperUserPermissionDatabaseAccessor) SyncPermissions(ctx context.Con
 		// from openai_clients
 		// join openai_models on openai_clients.id = openai_models.client_id and openai_clients.description in (${client_names})
 		// where openai_clients = ${client} and openai_models.model in (${models})
-		// 	and openai_clients.id = ${client_id} and openai_models.model in (${models}) ...
+		// 	or openai_clients.id = ${client_id} and openai_models.model in (${models}) ...
 		modifyQuery := tx.Model(&model.OpenaiClient{}).Joins("?",
 			&clause.Join{
 				Type:  clause.InnerJoin,

@@ -1,7 +1,17 @@
 package service
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/gin-contrib/sse"
+	"github.com/gin-gonic/gin"
+	"io"
+	nh "net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,32 +29,6 @@ import (
 type CompatibleService struct{}
 
 func NewCompatibleService() *CompatibleService { return &CompatibleService{} }
-
-func (srv *CompatibleService) ChatCompleteAuthorize(ctx http.Context[*openai.CompleteChatRequestBody, *openai.CompleteChatResponseBody]) {
-	// check api key available
-	exist, allowIPs, err := CheckApiKeyAvailable(ctx, ctx.NormalHeaders().Authorization)
-	if err != nil {
-		global.Logger.Error(logger.NewFields(ctx).WithMessage("check api key available failed").WithData(err))
-		ctx.SetStatusCode(http.StatusInternalServerError)
-		ctx.SetResponse(srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", err.Error())))
-		ctx.Abort()
-		return
-	}
-
-	if !exist {
-		ctx.SetStatusCode(http.StatusUnauthorized)
-		ctx.SetResponse(srv.buildErrorChatCompleteResponse(ctx, "unauthorized"))
-		ctx.Abort()
-		return
-	}
-
-	// check allow ip
-	if !CheckAllowIP(ctx, ctx.ClientIP(), strings.Split(allowIPs, ",")) {
-		ctx.SetStatusCode(http.StatusForbidden)
-		ctx.SetResponse(srv.buildErrorChatCompleteResponse(ctx, "ip forbidden"))
-		ctx.Abort()
-	}
-}
 
 func (srv *CompatibleService) ChatComplete(ctx http.Context[*openai.CompleteChatRequestBody, *openai.CompleteChatResponseBody]) {
 	apiKey, request := ctx.NormalHeaders().Authorization, ctx.Request()
@@ -126,6 +110,117 @@ func (srv *CompatibleService) ChatComplete(ctx http.Context[*openai.CompleteChat
 	// return openai response
 	ctx.SetStatusCode(http.StatusOK)
 	ctx.SetResponse(&response)
+}
+
+func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
+	// check api key available
+	apiKey := ctx.GetHeader(http.HeaderAuthorization)
+	exist, allowIPs, err := CheckApiKeyAvailable(ctx, apiKey)
+	if err != nil {
+		global.Logger.Error(logger.NewFields(ctx).WithMessage("check api key available failed").WithData(err))
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", err.Error())))
+		return
+	}
+	if !exist {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, srv.buildErrorChatCompleteResponse(ctx, "unauthorized"))
+		return
+	}
+
+	// check allow ip
+	if !CheckAllowIP(ctx, ctx.ClientIP(), strings.Split(allowIPs, ",")) {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, srv.buildErrorChatCompleteResponse(ctx, "ip forbidden"))
+		return
+	}
+
+	request := &openai.CompleteChatRequestBody{}
+	bindErr := ctx.ShouldBindJSON(request)
+	if bindErr != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": bindErr.Error()})
+	}
+	writeBack, _ := json.Marshal(request)
+	ctx.Request.Body = io.NopCloser(bytes.NewBuffer(writeBack))
+
+	if request.Stream {
+		defer ctx.Abort()
+		inputMessages := make([]string, len(request.Messages))
+		for i, message := range request.Messages {
+			inputMessages[i] = message.Content
+		}
+		promptToken := CalculatePromptToken(inputMessages...)
+
+		// get available openai client
+		_, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, promptToken)
+		if getErr != nil && errors.Is(getErr, ErrorNoAvailableClient) {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, srv.buildErrorChatCompleteResponse(ctx, "no available client"))
+			return
+		} else if getErr != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", getErr.Error())))
+			return
+		}
+
+		// get client secrets
+		secrets, exist := global.OpenaiClientSecretsCacheInstance.Get(metadata.ClientID)
+		if !exist {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", "client secrets not found")))
+			return
+		}
+
+		// complete chat
+		requestURL, parseErr := url.JoinPath(secrets.BaseUrl, "/chat/completions")
+		if parseErr != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", parseErr.Error())))
+			return
+		}
+		global.Logger.Info(logger.NewFields(ctx).WithMessage("request openai chat completion").WithData(requestURL))
+		body, _ := json.Marshal(request)
+		openaiRequest, buildErr := nh.NewRequest(http.POST, requestURL, bytes.NewBuffer(body))
+		if buildErr != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", buildErr.Error())))
+			return
+		}
+
+		openaiRequest.Header.Set(http.HeaderAuthorization, values.BuildStrings("Bearer ", secrets.ApiKey))
+		openaiRequest.Header.Set(http.HeaderContentType, http.ContentTypeJson)
+
+		response, executeErr := httpClient.Do(openaiRequest)
+		if executeErr != nil {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", executeErr.Error())))
+			return
+		}
+
+		if response.StatusCode != http.StatusOK {
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", "response status code not 200, ", strconv.Itoa(response.StatusCode))))
+			return
+		}
+
+		ctx.Header(http.HeaderContentType, "text/event-stream")
+		ctx.Header("Cache-Control", "no-cache")
+		ctx.Header("Transfer-Encoding", "chunked")
+		ctx.Header("Connection", "keep-alive")
+
+		// parse streaming response
+		reader := bufio.NewReader(response.Body)
+		for {
+			line, readErr := reader.ReadString('\n')
+			line = strings.TrimSuffix(line, "\n")
+			line = strings.TrimPrefix(line, "data: ")
+			if readErr != nil && errors.Is(readErr, io.EOF) {
+				break
+			} else if readErr != nil {
+				ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", readErr.Error())))
+			}
+
+			if len(strings.TrimSpace(line)) > 0 {
+				fmt.Println(line)
+				e := sse.Encode(ctx.Writer, sse.Event{Data: line})
+				if e != nil {
+					fmt.Println("error", e)
+				}
+				ctx.Writer.Flush()
+				fmt.Println("flush")
+			}
+		}
+	}
 }
 
 func (srv *CompatibleService) ListModel(ctx http.Context[*openai.ListModelRequest, *openai.ListModelResponseBody]) {

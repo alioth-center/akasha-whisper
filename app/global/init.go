@@ -92,7 +92,12 @@ func initializeDatabase() {
 			EnableSSL: Config.Database.SSL,
 			Debug:     false,
 		}
-		pgDB, initErr := postgres.NewWithLogger(pgCfg, Logger, syncModels...)
+
+		models := syncModels
+		if !Config.Database.SyncModels {
+			models = []any{}
+		}
+		pgDB, initErr := postgres.NewWithLogger(pgCfg, Logger, models...)
 		if initErr != nil {
 			panic(initErr)
 		}
@@ -108,7 +113,12 @@ func initializeDatabase() {
 			Location:  Config.Database.Location,
 			ParseTime: Config.Database.Location != "",
 		}
-		mysqlDB, initErr := mysql.NewWithLogger(mysqlCfg, Logger, syncModels...)
+
+		models := syncModels
+		if !Config.Database.SyncModels {
+			models = []any{}
+		}
+		mysqlDB, initErr := mysql.NewWithLogger(mysqlCfg, Logger, models...)
 		if initErr != nil {
 			panic(initErr)
 		}
@@ -118,7 +128,12 @@ func initializeDatabase() {
 		sqliteCfg := sqlite.Config{
 			Database: "./data/akasha_whisper.db",
 		}
-		sqliteDB, initErr := sqlite.NewWithLogger(sqliteCfg, Logger, syncModels...)
+
+		models := syncModels
+		if !Config.Database.SyncModels {
+			models = []any{}
+		}
+		sqliteDB, initErr := sqlite.NewWithLogger(sqliteCfg, Logger, models...)
 		if initErr != nil {
 			panic(initErr)
 		}
@@ -142,6 +157,7 @@ func initializeDatabase() {
 
 func initializeCache() {
 	OpenaiClientCacheInstance = concurrency.NewMap[int, openai.Client]()
+	OpenaiClientSecretsCacheInstance = concurrency.NewMap[int, *openai.Config]()
 }
 
 func initializeBloomFilter(ctx context.Context) {

@@ -7,6 +7,7 @@ import (
 )
 
 var (
-	BearerTokenBloomFilterInstance *dao.BearerTokenBloomFilter
-	OpenaiClientCacheInstance      concurrency.Map[int, openai.Client]
+	BearerTokenBloomFilterInstance   *dao.BearerTokenBloomFilter
+	OpenaiClientCacheInstance        concurrency.Map[int, openai.Client]
+	OpenaiClientSecretsCacheInstance concurrency.Map[int, *openai.Config]
 )

@@ -9,6 +9,7 @@ import (
 var OpenAiCompatibleRouterGroup = []http.EndPointInterface{
 	http.NewEndPointBuilder[*openai.CompleteChatRequestBody, *openai.CompleteChatResponseBody]().
 		SetNecessaryHeaders("Authorization").
+		SetGinMiddlewares(api.CompatibleApi.StreamingCompleteChat()...).
 		SetHandlerChain(api.CompatibleApi.CompleteChat()).
 		SetAllowMethods(http.POST).
 		SetRouter(http.NewRouter("/chat/completions")).

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/http"
 	"strings"
 
 	"github.com/alioth-center/akasha-whisper/app/global"
@@ -14,6 +15,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
+
+var httpClient = http.Client{}
 
 func CheckApiKeyAvailable(ctx context.Context, key string) (exist bool, allowIPs string, err error) {
 	token := strings.TrimPrefix(key, "Bearer ")
@@ -89,6 +92,7 @@ func GetAvailableClient(ctx context.Context, key string, modelName string, promp
 		}
 		openaiClient = openai.NewClient(openaiClientConfig, global.Logger)
 		global.OpenaiClientCacheInstance.Set(effectiveClient.ClientID, openaiClient)
+		global.OpenaiClientSecretsCacheInstance.Set(effectiveClient.ClientID, &openaiClientConfig)
 		global.Logger.Info(logger.NewFields(ctx).WithMessage("openai client initialized").WithData(map[string]any{"metadata": effectiveClient, "client": openaiClient}))
 	}
 
