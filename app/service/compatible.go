@@ -6,14 +6,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-contrib/sse"
-	"github.com/gin-gonic/gin"
 	"io"
 	nh "net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-contrib/sse"
+	"github.com/gin-gonic/gin"
 
 	"github.com/alioth-center/akasha-whisper/app/global"
 	"github.com/alioth-center/akasha-whisper/app/model"
