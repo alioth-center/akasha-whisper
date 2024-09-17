@@ -4,12 +4,21 @@ import (
 	"github.com/alioth-center/akasha-whisper/app/entity"
 	"github.com/alioth-center/akasha-whisper/app/service"
 	"github.com/alioth-center/infrastructure/network/http"
+	gin "github.com/gin-gonic/gin"
 )
 
 var ManagementApi managementApiImpl
 
 type managementApiImpl struct {
 	service *service.ManagementService
+}
+
+func (impl managementApiImpl) AuthorizeManagementKey() http.Chain[http.NoBody, http.NoResponse] {
+	return http.NewChain(impl.service.AuthorizeManagementKey)
+}
+
+func (impl managementApiImpl) Overview() http.Chain[*entity.OverviewRequest, *entity.OverviewResponse] {
+	return http.NewChain(impl.service.Overview)
 }
 
 func (impl managementApiImpl) ListClients() http.Chain[*entity.ListClientsRequest, *entity.ListClientResponse] {
@@ -101,4 +110,8 @@ func (impl managementApiImpl) ModifyWhisperUserPermissions() http.Chain[*entity.
 		service.CheckManagementKey[*entity.ModifyWhisperUserPermissionRequest, *entity.ModifyWhisperUserPermissionResult],
 		impl.service.ModifyWhisperUserPermissions,
 	)
+}
+
+func (impl managementApiImpl) PreCheckCookie() []gin.HandlerFunc {
+	return []gin.HandlerFunc{impl.service.PreCheckCookie}
 }

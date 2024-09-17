@@ -24,3 +24,4 @@ app:
   max_token: 128000 # global max token, must be greater than 0
   management_token: 'your_management_token' # management token, must be set, empty means disable management apis
   price_token_unit: 1000 # price token unit, must be greater than 0, means if $5 = 1M tokens, your price_token_unit = 1000000, and prompt_price or completion_price = 5
+  login_token_key: 'akasha_whisper_login_token' # login token key, must be set, empty means disable cookie login

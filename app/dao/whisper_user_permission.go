@@ -115,18 +115,27 @@ func (ac *WhisperUserPermissionDatabaseAccessor) SyncPermissions(ctx context.Con
 			database.ColumnAlias(model.TableNameOpenaiModels, model.OpenaiModelCols.ID, "model_id"),
 			database.ColumnAlias(model.TableNameOpenaiModels, model.OpenaiModelCols.Model, "model_name"),
 		)
+		var conditions []clause.Expression
 		for clientName, models := range permissions {
 			var modelsCond []any
 			for _, modelName := range models {
 				modelsCond = append(modelsCond, modelName)
 			}
-			modifyQuery = modifyQuery.Where(clause.Eq{
-				Column: clause.Column{Table: model.TableNameOpenaiClients, Name: model.OpenaiClientCols.Description},
-				Value:  clientName,
-			}).Where(clause.IN{
-				Column: clause.Column{Table: model.TableNameOpenaiModels, Name: model.OpenaiModelCols.Model},
-				Values: modelsCond,
-			})
+			// Append the condition for this clientName and its models
+			conditions = append(conditions, clause.And(
+				clause.Eq{
+					Column: clause.Column{Table: model.TableNameOpenaiClients, Name: model.OpenaiClientCols.Description},
+					Value:  clientName,
+				},
+				clause.IN{
+					Column: clause.Column{Table: model.TableNameOpenaiModels, Name: model.OpenaiModelCols.Model},
+					Values: modelsCond,
+				},
+			))
+		}
+		// Apply the conditions to the base query using Or
+		if len(conditions) > 0 {
+			modifyQuery = modifyQuery.Where(clause.Or(conditions...))
 		}
 
 		// 3. execute modify query and original permissions query

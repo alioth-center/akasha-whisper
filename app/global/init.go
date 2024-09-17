@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/alioth-center/infrastructure/cache/memory"
+
 	"github.com/alioth-center/akasha-whisper/app/dao"
 	"github.com/alioth-center/akasha-whisper/app/model"
 	"github.com/alioth-center/infrastructure/config"
@@ -156,6 +158,7 @@ func initializeDatabase() {
 }
 
 func initializeCache() {
+	LoginCookieCacheInstance = memory.NewMemoryCache(memory.Config{EnableInitiativeClean: true, CleanIntervalSecond: 600, MaxCleanMicroSecond: 1000, MaxCleanPercentage: 100})
 	OpenaiClientCacheInstance = concurrency.NewMap[int, openai.Client]()
 	OpenaiClientSecretsCacheInstance = concurrency.NewMap[int, *openai.Config]()
 }

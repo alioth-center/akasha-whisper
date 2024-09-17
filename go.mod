@@ -5,6 +5,8 @@ go 1.22.4
 require (
 	github.com/alioth-center/infrastructure v1.2.19-0.20240913025603-1d50932f7b1f
 	github.com/bits-and-blooms/bloom/v3 v3.7.0
+	github.com/gin-contrib/sse v0.1.0
+	github.com/gin-gonic/gin v1.10.0
 	github.com/pandodao/tokenizer-go v0.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/shopspring/decimal v1.4.0
@@ -23,8 +25,6 @@ require (
 	github.com/dop251/goja_nodejs v0.0.0-20240418154818-2aae10d4cbcf // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.4 // indirect
-	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.10.0 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/glebarez/sqlite v1.11.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect

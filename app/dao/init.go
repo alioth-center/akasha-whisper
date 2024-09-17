@@ -20,6 +20,7 @@ const (
 	RawsqlOpenaiClientGetClientSecrets    RawsqlKey = "openai_client.get_client_secrets.sql"
 	RawsqlOpenaiClientListClients         RawsqlKey = "openai_client.list_clients.sql"
 	RawsqlWhisperUserGetUserInfo          RawsqlKey = "whisper_user.get_user_info.sql"
+	RawsqlOpenaiClientBalanceStatistics   RawsqlKey = "openai_client_balance.statistics.sql"
 )
 
 var rawSqlNames = []RawsqlKey{
@@ -27,6 +28,7 @@ var rawSqlNames = []RawsqlKey{
 	RawsqlOpenaiClientGetClientSecrets,
 	RawsqlOpenaiClientListClients,
 	RawsqlWhisperUserGetUserInfo,
+	RawsqlOpenaiClientBalanceStatistics,
 }
 
 func LoadRawSqlList(driverName string) {

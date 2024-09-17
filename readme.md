@@ -2,9 +2,8 @@
 
 ![Go Version](https://img.shields.io/github/go-mod/go-version/alioth-center/akasha-whisper)
 ![Release](https://img.shields.io/github/v/release/alioth-center/akasha-whisper)
-![CodeCov](https://img.shields.io/codecov/c/github/alioth-center/akasha-whisper)
 ![Go Report Card](https://goreportcard.com/badge/github.com/alioth-center/akasha-whisper)
-![GitHub Actions](https://img.shields.io/github/actions/workflow/status/alioth-center/akasha-whisper/codecov.yaml?branch=main)
+![GitHub Actions](https://img.shields.io/github/actions/workflow/status/alioth-center/akasha-whisper/build-docker.yml?branch=main)
 ![License](https://img.shields.io/github/license/alioth-center/akasha-whisper)
 
 

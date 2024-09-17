@@ -2,6 +2,9 @@ package dao
 
 import (
 	"context"
+	"time"
+
+	"github.com/alioth-center/akasha-whisper/app/model/dto"
 
 	"github.com/alioth-center/akasha-whisper/app/model"
 	"github.com/alioth-center/infrastructure/database"
@@ -112,4 +115,14 @@ func (ac *OpenaiClientBalanceDatabaseAccessor) CreateBalanceRecordByName(ctx con
 	}
 
 	return after, nil
+}
+
+func (ac *OpenaiClientBalanceDatabaseAccessor) StatisticsClientBalance(ctx context.Context, startDate time.Time) (result []*dto.OpenaiClientBalanceStatisticsDTO, err error) {
+	result = make([]*dto.OpenaiClientBalanceStatisticsDTO, 0)
+	sql := rawSqlList[RawsqlOpenaiClientBalanceStatistics]
+	if queryErr := ac.db.GetGormCore(ctx).Raw(sql, startDate).Scan(&result).Error; queryErr != nil {
+		return nil, errors.Wrap(queryErr, "statistics client balance failed")
+	}
+
+	return result, nil
 }

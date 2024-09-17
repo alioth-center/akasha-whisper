@@ -34,6 +34,7 @@ type AppConfig struct {
 	MaxToken        int    `yaml:"max_token"`
 	ManagementToken string `yaml:"management_token"`
 	PriceTokenUnit  int64  `yaml:"price_token_unit"`
+	LoginTokenKey   string `yaml:"login_token_key"`
 }
 
 type DatabaseConfig struct {

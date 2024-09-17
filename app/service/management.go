@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/alioth-center/akasha-whisper/app/entity"
 	"github.com/alioth-center/akasha-whisper/app/global"
 	"github.com/alioth-center/akasha-whisper/app/model"
@@ -20,6 +22,63 @@ import (
 type ManagementService struct{}
 
 func NewManagementService() *ManagementService { return &ManagementService{} }
+
+func (srv *ManagementService) AuthorizeManagementKey(ctx http.Context[http.NoBody, http.NoResponse]) {
+	token := ctx.NormalHeaders().Authorization
+	if !CheckManagementKeyAvailable(ctx, token) {
+		ctx.SetStatusCode(http.StatusForbidden)
+		return
+	}
+
+	srv.setManagementCookie(ctx)
+	ctx.SetStatusCode(http.StatusOK)
+}
+
+func (srv *ManagementService) Overview(ctx http.Context[*entity.OverviewRequest, *entity.OverviewResponse]) {
+	clients, listClientsErr := global.OpenaiClientDatabaseInstance.ListClients(ctx)
+	if listClientsErr != nil {
+		response := http.NewBaseResponse(ctx, &entity.OverviewResult{}, listClientsErr)
+		ctx.SetStatusCode(http.StatusInternalServerError)
+		ctx.SetResponse(&response)
+		return
+	}
+
+	cutoff := time.Now().AddDate(0, 0, -14)
+	clientBalanceLogs, listLogsErr := global.OpenaiClientBalanceDatabaseInstance.StatisticsClientBalance(ctx, cutoff)
+	if listLogsErr != nil {
+		response := http.NewBaseResponse(ctx, &entity.OverviewResult{}, listLogsErr)
+		ctx.SetStatusCode(http.StatusInternalServerError)
+		ctx.SetResponse(&response)
+		return
+	}
+
+	result := &entity.OverviewResult{
+		Clients:           make([]entity.ClientItem, len(clients)),
+		ClientBalanceLogs: make([]entity.OverviewClientBalanceLog, len(clientBalanceLogs)),
+	}
+	for i, client := range clients {
+		result.Clients[i] = entity.ClientItem{
+			ID:       client.ClientID,
+			Name:     client.ClientDescription,
+			ApiKey:   values.SecretString(client.ClientKey, 6, 4, "*"),
+			Endpoint: client.ClientEndpoint,
+			Weight:   client.ClientWeight,
+			Balance:  client.ClientBalance,
+		}
+	}
+	for i, log := range clientBalanceLogs {
+		result.ClientBalanceLogs[i] = entity.OverviewClientBalanceLog{
+			ClientName:   log.ClientName,
+			TotalRequest: log.RequestCount,
+			TotalCost:    log.TotalCost,
+			Date:         log.DateDay.Format("20060102"),
+		}
+	}
+
+	response := http.NewBaseResponse(ctx, result, nil)
+	ctx.SetStatusCode(http.StatusOK)
+	ctx.SetResponse(&response)
+}
 
 func (srv *ManagementService) ListAllClients(ctx http.Context[*entity.ListClientsRequest, *entity.ListClientResponse]) {
 	clients, err := global.OpenaiClientDatabaseInstance.ListClients(ctx)
@@ -511,5 +570,33 @@ func CheckManagementKey[req any, res any](ctx http.Context[req, *http.BaseRespon
 		ctx.SetStatusCode(http.StatusForbidden)
 		ctx.SetResponse(&response)
 		ctx.Abort()
+	}
+}
+
+func (srv *ManagementService) setManagementCookie(ctx http.Context[http.NoBody, http.NoResponse]) {
+	key := generate.RandomBase62(64)
+	for exist, _ := global.LoginCookieCacheInstance.ExistKey(ctx, values.BuildStrings("login_token:", key)); exist; key = generate.RandomBase62(64) {
+	}
+
+	_ = global.LoginCookieCacheInstance.StoreJsonEX(ctx, values.BuildStrings("login_token:", key), &entity.LoginToken{IP: ctx.ClientIP(), CreatedAt: time.Now()}, time.Hour)
+	ctx.SetResponseSetCookie(http.NewBasicCookie(global.Config.App.LoginTokenKey, key))
+}
+
+func (srv *ManagementService) PreCheckCookie(ctx *gin.Context) {
+	if cookie, _ := ctx.Cookie(global.Config.App.LoginTokenKey); cookie != "" {
+		loginToken := &entity.LoginToken{}
+		if exist, err := global.LoginCookieCacheInstance.LoadJson(ctx, values.BuildStrings("login_token:", cookie), loginToken); err == nil && exist {
+			if loginToken.IP == ctx.ClientIP() {
+				_ = global.LoginCookieCacheInstance.StoreJsonEX(ctx, values.BuildStrings("login_token:", cookie), loginToken, time.Hour)
+
+				// write back to request header to pass header params check
+				ctx.Request.Header.Set(http.HeaderAuthorization, "Bearer "+global.Config.App.ManagementToken)
+				return
+			}
+		}
+
+		// unauthorized, login token invalid, clear cookie
+		cookie := http.NewBasicCookie(global.Config.App.LoginTokenKey, "")
+		ctx.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
 	}
 }
