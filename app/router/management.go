@@ -12,8 +12,8 @@ var ManagementRouterGroup = []http.EndPointInterface{
 	http.NewEndPointBuilder[http.NoBody, http.NoResponse]().
 		SetNecessaryHeaders(http.HeaderAuthorization).
 		SetHandlerChain(api.ManagementApi.AuthorizeManagementKey()).
-		SetAllowMethods(http.HEAD).
-		SetRouter(managementRouter).
+		SetAllowMethods(http.POST).
+		SetRouter(managementRouter.Group("session")).
 		Build(),
 	http.NewEndPointBuilder[*entity.OverviewRequest, *entity.OverviewResponse]().
 		SetNecessaryHeaders(http.HeaderAuthorization).

@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	nh "net/http"
 	"net/url"
@@ -172,7 +171,6 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", parseErr.Error())))
 			return
 		}
-		global.Logger.Info(logger.NewFields(ctx).WithMessage("request openai chat completion").WithData(requestURL))
 		body, _ := json.Marshal(request)
 		openaiRequest, buildErr := nh.NewRequest(http.POST, requestURL, bytes.NewBuffer(body))
 		if buildErr != nil {
@@ -183,7 +181,7 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 		openaiRequest.Header.Set(http.HeaderAuthorization, values.BuildStrings("Bearer ", secrets.ApiKey))
 		openaiRequest.Header.Set(http.HeaderContentType, http.ContentTypeJson)
 
-		response, executeErr := httpClient.Do(openaiRequest)
+		response, executeErr := global.Client.ExecuteRawRequest(openaiRequest)
 		if executeErr != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", executeErr.Error())))
 			return
@@ -199,6 +197,8 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 		ctx.Header("Transfer-Encoding", "chunked")
 		ctx.Header("Connection", "keep-alive")
 
+		completionToken := int64(0)
+
 		// parse streaming response
 		reader := bufio.NewReader(response.Body)
 		for {
@@ -212,13 +212,32 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 			}
 
 			if len(strings.TrimSpace(line)) > 0 {
-				fmt.Println(line)
-				e := sse.Encode(ctx.Writer, sse.Event{Data: line})
-				if e != nil {
-					fmt.Println("error", e)
-				}
+				_ = sse.Encode(ctx.Writer, sse.Event{Data: line})
 				ctx.Writer.Flush()
-				fmt.Println("flush")
+				completionToken++
+			}
+		}
+
+		promptCostAmount := metadata.ModelPromptPrice.Mul(decimal.NewFromInt(promptToken)).Div(decimal.NewFromInt(global.Config.App.PriceTokenUnit))
+		completionCostAmount := metadata.ModelCompletionPrice.Mul(decimal.NewFromInt(completionToken)).Div(decimal.NewFromInt(global.Config.App.PriceTokenUnit))
+		balanceCost := promptCostAmount.Add(completionCostAmount).Mul(decimal.NewFromInt(-1))
+		_, updateClientBalanceErr := global.OpenaiClientBalanceDatabaseInstance.CreateBalanceRecord(ctx, metadata.ClientID, balanceCost, model.OpenaiClientBalanceActionConsumption)
+		_, updateUserBalanceErr := global.WhisperUserBalanceDatabaseInstance.CreateBalanceRecord(ctx, metadata.UserID, balanceCost, model.WhisperUserBalanceActionConsumption)
+		updateRequestErr := global.OpenaiRequestDatabaseInstance.CreateOpenaiRequestRecord(ctx, &model.OpenaiRequest{
+			ClientID:             int64(metadata.ClientID),
+			ModelID:              int64(metadata.ModelID),
+			UserID:               int64(metadata.UserID),
+			RequestIP:            ctx.ClientIP(),
+			RequestID:            trace.GetTid(ctx),
+			TraceID:              trace.GetTid(ctx),
+			PromptTokenUsage:     int(promptToken),
+			CompletionTokenUsage: int(completionToken),
+			BalanceCost:          balanceCost.Abs(),
+		})
+
+		for _, err := range []error{updateClientBalanceErr, updateUserBalanceErr, updateRequestErr} {
+			if err != nil {
+				global.Logger.Error(logger.NewFields(ctx).WithMessage("update response result failed").WithData(err))
 			}
 		}
 	}

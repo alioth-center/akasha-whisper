@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"net/http"
 	"strings"
 
 	"github.com/alioth-center/akasha-whisper/app/global"
@@ -15,8 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
-
-var httpClient = http.Client{}
 
 func CheckApiKeyAvailable(ctx context.Context, key string) (exist bool, allowIPs string, err error) {
 	token := strings.TrimPrefix(key, "Bearer ")

@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/alioth-center/infrastructure/network/http"
+
 	"github.com/alioth-center/infrastructure/cache/memory"
 
 	"github.com/alioth-center/akasha-whisper/app/dao"
@@ -36,6 +38,9 @@ func init() {
 
 	// initialize logger
 	initializeLogger()
+
+	// initialize http client
+	initializeClient()
 
 	// initialize databases
 	initializeDatabase()
@@ -182,4 +187,8 @@ func initializeBloomFilter(ctx context.Context) {
 
 	// add all tokens to bloom filter
 	BearerTokenBloomFilterInstance.AddKeys(tokens...)
+}
+
+func initializeClient() {
+	Client = http.NewLoggerClient(Logger)
 }
