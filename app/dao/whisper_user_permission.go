@@ -221,17 +221,19 @@ func (ac *WhisperUserPermissionDatabaseAccessor) SyncPermissions(ctx context.Con
 
 		// 6. insert and delete the difference
 		deleteModels := make([]int, 0, len(currentPermissions))
-		for _, models := range insertPermissions {
+		for _, models := range currentPermissions {
 			for _, modelDTO := range models {
 				deleteModels = append(deleteModels, modelDTO.ModelID)
 			}
 		}
-		if deleteErr := tx.Model(&model.WhisperUserPermission{}).
-			Where(model.WhisperUserPermissionCols.UserID, userID).
-			Where(model.WhisperUserPermissionCols.ModelID, deleteModels).
-			Delete(&model.WhisperUserPermission{}).
-			Error; deleteErr != nil {
-			return deleteErr
+		if len(deleteModels) > 0 {
+			if deleteErr := tx.Model(&model.WhisperUserPermission{}).
+				Where(model.WhisperUserPermissionCols.UserID, userID).
+				Where(model.WhisperUserPermissionCols.ModelID, deleteModels).
+				Delete(&model.WhisperUserPermission{}).
+				Error; deleteErr != nil {
+				return deleteErr
+			}
 		}
 
 		insertPermissionsDTOs := make([]model.WhisperUserPermission, 0, len(insertPermissions))
