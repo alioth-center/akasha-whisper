@@ -35,6 +35,7 @@ func (ac *OpenaiClientBalanceDatabaseAccessor) CreateBalanceRecord(ctx context.C
 			Where(model.OpenaiClientBalanceCols.ClientID, clientID).
 			Select(model.OpenaiClientBalanceCols.BalanceRemaining, model.OpenaiClientBalanceCols.ID).
 			Order(clause.OrderByColumn{Column: clause.Column{Name: model.OpenaiClientBalanceCols.CreatedAt}, Desc: true}).
+			Limit(1).
 			Scan(&receiver).
 			Error; queryErr != nil {
 			return queryErr
@@ -88,6 +89,7 @@ func (ac *OpenaiClientBalanceDatabaseAccessor) CreateBalanceRecordByName(ctx con
 			Where(model.OpenaiClientBalanceCols.ClientID, clientID).
 			Select(model.OpenaiClientBalanceCols.BalanceRemaining).
 			Order(clause.OrderByColumn{Column: clause.Column{Name: model.OpenaiClientBalanceCols.CreatedAt}, Desc: true}).
+			Limit(1).
 			Scan(&receiver).
 			Error; queryErr != nil && !errors.Is(queryErr, gorm.ErrRecordNotFound) {
 			return queryErr
