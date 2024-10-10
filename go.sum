@@ -1,9 +1,7 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/alioth-center/infrastructure v1.2.19-0.20240913025603-1d50932f7b1f h1:Icm1/ykakPK+mD6aa4duRFFSVcwkNdbAjSVmdvQukWE=
-github.com/alioth-center/infrastructure v1.2.19-0.20240913025603-1d50932f7b1f/go.mod h1:NN+S3dKyPw7A4phkij8jzKG8aHpOqDsPG+/KRvHbAnM=
-github.com/alioth-center/infrastructure v1.2.19-0.20240926071335-024250e552c5 h1:8zdKiqA3Hw2ov3pcOSZ/yks7NFn29FyX65Yr97BJ8eI=
-github.com/alioth-center/infrastructure v1.2.19-0.20240926071335-024250e552c5/go.mod h1:QMr9jurGWQ30p0wG2IcatILimuSypnF0YtmyzD2PFmE=
+github.com/alioth-center/infrastructure v1.2.19 h1:lPMy8clZPA0S3VD/wNpufMHIC+0pkq2R26NmlHEk1ww=
+github.com/alioth-center/infrastructure v1.2.19/go.mod h1:QMr9jurGWQ30p0wG2IcatILimuSypnF0YtmyzD2PFmE=
 github.com/bits-and-blooms/bitset v1.10.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/bits-and-blooms/bitset v1.14.2 h1:YXVoyPndbdvcEVcseEovVfp0qjJp7S+i5+xgp/Nfbdc=
 github.com/bits-and-blooms/bitset v1.14.2/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=

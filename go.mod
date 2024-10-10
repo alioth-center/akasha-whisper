@@ -3,7 +3,7 @@ module github.com/alioth-center/akasha-whisper
 go 1.22.4
 
 require (
-	github.com/alioth-center/infrastructure v1.2.19-0.20240926071335-024250e552c5
+	github.com/alioth-center/infrastructure v1.2.19
 	github.com/bits-and-blooms/bloom/v3 v3.7.0
 	github.com/gin-contrib/sse v0.1.0
 	github.com/gin-gonic/gin v1.10.0
