@@ -456,7 +456,7 @@ func (srv *CompatibleService) buildErrorChatCompleteResponse(ctx context.Context
 		ID:      trace.GetTid(ctx),
 		Object:  "chat.completion",
 		Created: time.Now().UnixMilli(),
-		Choices: []openai.ReplyChoiceObject{{Index: 0, Message: openai.ChatMessageObject{Role: openai.ChatRoleEnumAssistant, Content: json.RawMessage(content)}, FinishReason: "error"}},
+		Choices: []openai.ReplyChoiceObject{{Index: 0, Message: openai.ChatMessageObject{Role: openai.ChatRoleEnumAssistant, Content: json.RawMessage(values.BuildStrings(`"`, content, `"`))}, FinishReason: "error"}},
 		Usage:   openai.UsageObject{},
 		Model:   "akasha-whisper",
 	}
