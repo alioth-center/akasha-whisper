@@ -1,14 +1,10 @@
 package service
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"io"
-	nh "net/http"
-	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -36,12 +32,12 @@ func (srv *CompatibleService) ChatComplete(ctx http.Context[*openai.CompleteChat
 	// calculate prompt token
 	inputMessages := make([]string, len(request.Messages))
 	for i, message := range request.Messages {
-		inputMessages[i] = message.Content
+		inputMessages[i] = message.GetStringContent()
 	}
 	promptToken := CalculatePromptToken(inputMessages...)
 
 	// get available openai client
-	client, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, promptToken)
+	client, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, promptToken, "chat")
 	if getErr != nil && errors.Is(getErr, ErrorNoAvailableClient) {
 		ctx.SetStatusCode(http.StatusForbidden)
 		ctx.SetResponse(srv.buildErrorChatCompleteResponse(ctx, "no available client"))
@@ -144,12 +140,12 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 		defer ctx.Abort()
 		inputMessages := make([]string, len(request.Messages))
 		for i, message := range request.Messages {
-			inputMessages[i] = message.Content
+			inputMessages[i] = message.GetStringContent()
 		}
 		promptToken := CalculatePromptToken(inputMessages...)
 
 		// get available openai client
-		_, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, promptToken)
+		client, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, promptToken, "chat")
 		if getErr != nil && errors.Is(getErr, ErrorNoAvailableClient) {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, srv.buildErrorChatCompleteResponse(ctx, "no available client"))
 			return
@@ -158,37 +154,10 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 			return
 		}
 
-		// get client secrets
-		secrets, exist := global.OpenaiClientSecretsCacheInstance.Get(metadata.ClientID)
-		if !exist {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", "client secrets not found")))
-			return
-		}
-
-		// complete chat
-		requestURL, parseErr := url.JoinPath(secrets.BaseUrl, "/chat/completions")
-		if parseErr != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", parseErr.Error())))
-			return
-		}
-		body, _ := json.Marshal(request)
-		openaiRequest, buildErr := nh.NewRequest(http.POST, requestURL, bytes.NewBuffer(body))
-		if buildErr != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", buildErr.Error())))
-			return
-		}
-
-		openaiRequest.Header.Set(http.HeaderAuthorization, values.BuildStrings("Bearer ", secrets.ApiKey))
-		openaiRequest.Header.Set(http.HeaderContentType, http.ContentTypeJson)
-
-		response, executeErr := global.Client.ExecuteRawRequest(openaiRequest)
+		request.StreamOptions = json.RawMessage(`{"include_usage": true}`)
+		response, executeErr := client.CompleteStreamingChat(ctx, openai.CompleteChatRequest{Body: *request})
 		if executeErr != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", executeErr.Error())))
-			return
-		}
-
-		if response.StatusCode != http.StatusOK {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", "response status code not 200, ", strconv.Itoa(response.StatusCode))))
 			return
 		}
 
@@ -197,27 +166,31 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 		ctx.Header("Transfer-Encoding", "chunked")
 		ctx.Header("Connection", "keep-alive")
 
-		completionToken := int64(0)
+		completionToken, requestID := int64(0), ""
 
-		// parse streaming response
-		reader := bufio.NewReader(response.Body)
-		for {
-			line, readErr := reader.ReadString('\n')
-			line = strings.TrimSuffix(line, "\n")
-			line = strings.TrimPrefix(line, "data: ")
-			if readErr != nil && errors.Is(readErr, io.EOF) {
-				break
-			} else if readErr != nil {
-				ctx.AbortWithStatusJSON(http.StatusInternalServerError, srv.buildErrorChatCompleteResponse(ctx, values.BuildStrings("internal server error: ", readErr.Error())))
+		for object := range response {
+			encodeErr := sse.Encode(ctx.Writer, sse.Event{Data: object})
+			if encodeErr != nil {
+				global.Logger.Error(logger.NewFields(ctx).WithMessage("encode response failed").WithData(encodeErr))
+				continue
 			}
+			ctx.Writer.Flush()
 
-			if len(strings.TrimSpace(line)) > 0 {
-				_ = sse.Encode(ctx.Writer, sse.Event{Data: line})
-				ctx.Writer.Flush()
-				completionToken++
+			if object.Usage != nil {
+				completionToken = int64(object.Usage.CompletionTokens)
+				promptToken = int64(object.Usage.PromptTokens)
+				requestID = object.Id
 			}
 		}
 
+		// send done message
+		encodeErr := sse.Encode(ctx.Writer, sse.Event{Data: "[DONE]"})
+		if encodeErr != nil {
+			global.Logger.Error(logger.NewFields(ctx).WithMessage("encode response failed").WithData(encodeErr))
+		}
+		ctx.Writer.Flush()
+
+		// parse streaming response
 		promptCostAmount := metadata.ModelPromptPrice.Mul(decimal.NewFromInt(promptToken)).Div(decimal.NewFromInt(global.Config.App.PriceTokenUnit))
 		completionCostAmount := metadata.ModelCompletionPrice.Mul(decimal.NewFromInt(completionToken)).Div(decimal.NewFromInt(global.Config.App.PriceTokenUnit))
 		balanceCost := promptCostAmount.Add(completionCostAmount).Mul(decimal.NewFromInt(-1))
@@ -228,7 +201,7 @@ func (srv *CompatibleService) StreamingChatCompletion(ctx *gin.Context) {
 			ModelID:              int64(metadata.ModelID),
 			UserID:               int64(metadata.UserID),
 			RequestIP:            ctx.ClientIP(),
-			RequestID:            trace.GetTid(ctx),
+			RequestID:            requestID,
 			TraceID:              trace.GetTid(ctx),
 			PromptTokenUsage:     int(promptToken),
 			CompletionTokenUsage: int(completionToken),
@@ -269,6 +242,89 @@ func (srv *CompatibleService) ListModel(ctx http.Context[*openai.ListModelReques
 	ctx.SetResponse(response)
 }
 
+func (srv *CompatibleService) EmbeddingAuthorize(ctx http.Context[*openai.EmbeddingRequestBody, *openai.EmbeddingResponseBody]) {
+	// check api key available
+	exist, allowIPs, err := CheckApiKeyAvailable(ctx, ctx.NormalHeaders().Authorization)
+	if err != nil {
+		global.Logger.Error(logger.NewFields(ctx).WithMessage("check api key available failed").WithData(err))
+		ctx.SetStatusCode(http.StatusInternalServerError)
+		ctx.SetResponse(&openai.EmbeddingResponseBody{})
+		ctx.Abort()
+		return
+	}
+
+	if !exist {
+		ctx.SetStatusCode(http.StatusUnauthorized)
+		ctx.SetResponse(&openai.EmbeddingResponseBody{})
+		ctx.Abort()
+		return
+	}
+
+	// check allow ip
+	if !CheckAllowIP(ctx, ctx.ClientIP(), strings.Split(allowIPs, ",")) {
+		ctx.SetStatusCode(http.StatusForbidden)
+		ctx.SetResponse(&openai.EmbeddingResponseBody{})
+		ctx.Abort()
+	}
+}
+
+func (srv *CompatibleService) Embedding(ctx http.Context[*openai.EmbeddingRequestBody, *openai.EmbeddingResponseBody]) {
+	apiKey, request := ctx.NormalHeaders().Authorization, ctx.Request()
+
+	// get available openai client
+	client, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, 0, "embedding")
+	if getErr != nil && errors.Is(getErr, ErrorNoAvailableClient) {
+		ctx.SetStatusCode(http.StatusForbidden)
+		ctx.SetResponse(&openai.EmbeddingResponseBody{})
+		ctx.Abort()
+		return
+	} else if getErr != nil {
+		ctx.SetStatusCode(http.StatusInternalServerError)
+		ctx.SetResponse(&openai.EmbeddingResponseBody{})
+		ctx.Abort()
+		return
+	}
+
+	response, executeErr := client.Embedding(ctx, openai.EmbeddingRequest{
+		Body: openai.EmbeddingRequestBody{
+			Input: request.Input,
+			Model: request.Model,
+		},
+	})
+	if executeErr != nil {
+		ctx.SetStatusCode(http.StatusInternalServerError)
+		ctx.SetResponse(&openai.EmbeddingResponseBody{})
+		ctx.Abort()
+		return
+	}
+
+	// consume success, update balances
+	promptCostAmount := metadata.ModelPromptPrice.Mul(decimal.NewFromInt(1).Div(decimal.NewFromInt(global.Config.App.PriceTokenUnit)))
+	completionCostAmount := metadata.ModelCompletionPrice.Mul(decimal.NewFromInt(0).Div(decimal.NewFromInt(global.Config.App.PriceTokenUnit)))
+	balanceCost := promptCostAmount.Add(completionCostAmount).Mul(decimal.NewFromInt(-1))
+	_, updateClientBalanceErr := global.OpenaiClientBalanceDatabaseInstance.CreateBalanceRecord(ctx, metadata.ClientID, balanceCost, model.OpenaiClientBalanceActionConsumption)
+	_, updateUserBalanceErr := global.WhisperUserBalanceDatabaseInstance.CreateBalanceRecord(ctx, metadata.UserID, balanceCost, model.WhisperUserBalanceActionConsumption)
+	updateRequestErr := global.OpenaiRequestDatabaseInstance.CreateOpenaiRequestRecord(ctx, &model.OpenaiRequest{
+		ClientID:             int64(metadata.ClientID),
+		ModelID:              int64(metadata.ModelID),
+		UserID:               int64(metadata.UserID),
+		RequestIP:            ctx.ExtraParams().GetString(http.RemoteIPKey),
+		RequestID:            trace.GetTid(ctx),
+		TraceID:              trace.GetTid(ctx),
+		PromptTokenUsage:     1,
+		CompletionTokenUsage: 0,
+		BalanceCost:          balanceCost.Abs(),
+	})
+	for _, err := range []error{updateClientBalanceErr, updateUserBalanceErr, updateRequestErr} {
+		if err != nil {
+			global.Logger.Error(logger.NewFields(ctx).WithMessage("update response result failed").WithData(err))
+		}
+	}
+
+	ctx.SetStatusCode(http.StatusOK)
+	ctx.SetResponse(&response)
+}
+
 func (srv *CompatibleService) CreateSpeechAuthorize(ctx http.Context[*openai.CreateSpeechRequestBody, *openai.CreateSpeechResponseBody]) {
 	// check api key available
 	exist, allowIPs, err := CheckApiKeyAvailable(ctx, ctx.NormalHeaders().Authorization)
@@ -302,7 +358,7 @@ func (srv *CompatibleService) CreateSpeech(ctx http.Context[*openai.CreateSpeech
 	promptToken := int64(len([]rune(request.Input)))
 
 	// get available openai client
-	client, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, promptToken)
+	client, metadata, getErr := GetAvailableClient(ctx, apiKey, request.Model, promptToken, "speech")
 	if getErr != nil && errors.Is(getErr, ErrorNoAvailableClient) {
 		ctx.SetStatusCode(http.StatusForbidden)
 		ctx.SetResponse(&openai.CreateSpeechResponseBody{})
@@ -400,7 +456,7 @@ func (srv *CompatibleService) buildErrorChatCompleteResponse(ctx context.Context
 		ID:      trace.GetTid(ctx),
 		Object:  "chat.completion",
 		Created: time.Now().UnixMilli(),
-		Choices: []openai.ReplyChoiceObject{{Index: 0, Message: openai.ChatMessageObject{Role: openai.ChatRoleEnumAssistant, Content: content}, FinishReason: "error"}},
+		Choices: []openai.ReplyChoiceObject{{Index: 0, Message: openai.ChatMessageObject{Role: openai.ChatRoleEnumAssistant, Content: json.RawMessage(content)}, FinishReason: "error"}},
 		Usage:   openai.UsageObject{},
 		Model:   "akasha-whisper",
 	}

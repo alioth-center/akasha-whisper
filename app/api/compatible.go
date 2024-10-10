@@ -21,6 +21,10 @@ func (impl compatibleApiImpl) StreamingCompleteChat() []gin.HandlerFunc {
 	return []gin.HandlerFunc{impl.service.StreamingChatCompletion}
 }
 
+func (impl compatibleApiImpl) Embedding() http.Chain[*openai.EmbeddingRequestBody, *openai.EmbeddingResponseBody] {
+	return http.NewChain(impl.service.EmbeddingAuthorize, impl.service.Embedding)
+}
+
 func (impl compatibleApiImpl) ListModel() http.Chain[*openai.ListModelRequest, *openai.ListModelResponseBody] {
 	return http.NewChain(impl.service.ListModelAuthorize, impl.service.ListModel)
 }

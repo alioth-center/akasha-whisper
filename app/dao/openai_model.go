@@ -24,6 +24,7 @@ func (ac *OpenaiModelDatabaseAccessor) GetModelsByClientID(ctx context.Context, 
 	needFields := []string{
 		database.ColumnAlias(model.TableNameOpenaiClients, model.OpenaiClientCols.ID, "client_id"),
 		database.ColumnAlias(model.TableNameOpenaiModels, model.OpenaiModelCols.ID, "model_id"),
+		database.ColumnAlias(model.TableNameOpenaiModels, model.OpenaiModelCols.Type, "model_type"),
 		database.ColumnAlias(model.TableNameOpenaiModels, model.OpenaiModelCols.Model, "model_name"),
 		database.ColumnAlias(model.TableNameOpenaiModels, model.OpenaiModelCols.MaxTokens, "model_max_tokens"),
 		database.ColumnAlias(model.TableNameOpenaiModels, model.OpenaiModelCols.PromptPrice, "model_prompt_price"),
@@ -123,17 +124,6 @@ func (ac *OpenaiModelDatabaseAccessor) GetModelsByClientDescription(ctx context.
 	return result, nil
 }
 
-func (ac *OpenaiModelDatabaseAccessor) GetModelIDByName(ctx context.Context, modelName string) (modelID int, err error) {
-	result := new(model.OpenaiModel)
-
-	// select id from openai_models where model = ${modelName}
-	if queryErr := ac.db.GetDataBySingleCondition(ctx, result, model.OpenaiModelCols.Model, modelName, model.OpenaiClientCols.ID); queryErr != nil {
-		return 0, errors.Wrap(queryErr, "failed to get model id by model name")
-	}
-
-	return int(result.ID), nil
-}
-
 func (ac *OpenaiModelDatabaseAccessor) GetAvailableModelsByApiKey(ctx context.Context, key string) (result []*dto.RelatedModelDTO, err error) {
 	result = make([]*dto.RelatedModelDTO, 0)
 	needFields := []string{
@@ -206,6 +196,7 @@ func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModels(ctx context.Context,
 			updates = append(updates, &model.OpenaiModel{
 				ClientID:        int64(client),
 				Model:           modelItem.Model,
+				Type:            modelItem.Type,
 				MaxTokens:       modelItem.MaxTokens,
 				PromptPrice:     modelItem.PromptPrice,
 				CompletionPrice: modelItem.CompletionPrice,
@@ -239,6 +230,7 @@ func (ac *OpenaiModelDatabaseAccessor) CreateOrUpdateModelWithClientDescriptions
 				updates = append(updates, &model.OpenaiModel{
 					ClientID:        int64(client),
 					Model:           modelItem.Model,
+					Type:            modelItem.Type,
 					MaxTokens:       modelItem.MaxTokens,
 					PromptPrice:     modelItem.PromptPrice,
 					CompletionPrice: modelItem.CompletionPrice,

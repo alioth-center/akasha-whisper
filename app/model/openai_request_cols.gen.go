@@ -7,6 +7,8 @@ package model
 type openairequestCols struct {
 	ID                   string
 	ClientID             string
+	RequestID            string
+	TraceID              string
 	ModelID              string
 	UserID               string
 	RequestIP            string
@@ -19,6 +21,8 @@ type openairequestCols struct {
 var OpenaiRequestCols = &openairequestCols{
 	ID:                   "id",
 	ClientID:             "client_id",
+	RequestID:            "request_id",
+	TraceID:              "trace_id",
 	ModelID:              "model_id",
 	UserID:               "user_id",
 	RequestIP:            "request_ip",

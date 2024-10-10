@@ -47,10 +47,10 @@ func (ac *OpenaiClientDatabaseAccessor) CheckAllClientsExist(ctx context.Context
 	return notExistClientDescriptions, nil
 }
 
-func (ac *OpenaiClientDatabaseAccessor) GetAvailableClients(ctx context.Context, modelName, token string) (clients []*dto.AvailableClientDTO, err error) {
+func (ac *OpenaiClientDatabaseAccessor) GetAvailableClients(ctx context.Context, modelName, token, modelType string) (clients []*dto.AvailableClientDTO, err error) {
 	clients = make([]*dto.AvailableClientDTO, 0)
 	sql := rawSqlList[RawsqlOpenaiClientGetAvailableClients]
-	template := &dto.GetAvailableClientCND{ModelName: modelName, UserApiKey: token}
+	template := &dto.GetAvailableClientCND{ModelName: modelName, UserApiKey: token, ModelType: modelType}
 	if queryErr := ac.db.ExecuteRawSqlTemplateQuery(ctx, &clients, sql, template); queryErr != nil {
 		return nil, errors.Wrap(queryErr, "get available clients failed")
 	}

@@ -16,12 +16,14 @@ type ClientCheckDTO struct {
 type GetAvailableClientCND struct {
 	UserApiKey string
 	ModelName  string
+	ModelType  string
 }
 
 func (cnd *GetAvailableClientCND) ParseTemplate(tmpl string) string {
 	condition := map[string]string{
 		"user_api_key": cnd.UserApiKey,
 		"model_name":   cnd.ModelName,
+		"model_type":   cnd.ModelType,
 	}
 
 	return values.NewRawSqlTemplateWithMap(tmpl, condition).Parse()

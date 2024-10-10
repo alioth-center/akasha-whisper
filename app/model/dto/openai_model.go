@@ -9,6 +9,7 @@ import (
 type RelatedModelDTO struct {
 	ModelID         int             `gorm:"column:model_id"`
 	ModelName       string          `gorm:"column:model_name"`
+	ModelType       string          `gorm:"column:model_type"`
 	MaxTokens       int             `gorm:"column:model_max_tokens"`
 	ModelRpmLimit   int             `gorm:"column:model_rpm_limit"`
 	ModelTpmLimit   int             `gorm:"column:model_tpm_limit"`

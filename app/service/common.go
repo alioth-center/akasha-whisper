@@ -41,10 +41,10 @@ func CheckAllowIP(_ context.Context, ip string, allowIPs []string) bool {
 	})) > 0
 }
 
-func GetAvailableClient(ctx context.Context, key string, modelName string, promptToken int64) (client openai.Client, metadata *dto.AvailableClientDTO, err error) {
+func GetAvailableClient(ctx context.Context, key string, modelName string, promptToken int64, endpoint string) (client openai.Client, metadata *dto.AvailableClientDTO, err error) {
 	token := strings.TrimPrefix(key, "Bearer ")
 
-	clients, queryErr := global.OpenaiClientDatabaseInstance.GetAvailableClients(ctx, modelName, token)
+	clients, queryErr := global.OpenaiClientDatabaseInstance.GetAvailableClients(ctx, modelName, token, endpoint)
 	if queryErr != nil {
 		global.Logger.Info(logger.NewFields(ctx).WithMessage("query available clients failed").WithData(queryErr))
 		return nil, nil, queryErr

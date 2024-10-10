@@ -8,6 +8,7 @@ type openaimodelCols struct {
 	ID              string
 	ClientID        string
 	Model           string
+	Type            string
 	MaxTokens       string
 	PromptPrice     string
 	CompletionPrice string
@@ -21,6 +22,7 @@ var OpenaiModelCols = &openaimodelCols{
 	ID:              "id",
 	ClientID:        "client_id",
 	Model:           "model",
+	Type:            "type",
 	MaxTokens:       "max_tokens",
 	PromptPrice:     "prompt_price",
 	CompletionPrice: "completion_price",

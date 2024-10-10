@@ -16,6 +16,12 @@ var OpenAiCompatibleRouterGroup = []http.EndPointInterface{
 		SetAllowMethods(http.POST).
 		SetRouter(compatibleRouter.Group("/chat/completions")).
 		Build(),
+	http.NewEndPointBuilder[*openai.EmbeddingRequestBody, *openai.EmbeddingResponseBody]().
+		SetNecessaryHeaders("Authorization").
+		SetHandlerChain(api.CompatibleApi.Embedding()).
+		SetAllowMethods(http.POST).
+		SetRouter(compatibleRouter.Group("/embedding")).
+		Build(),
 	http.NewEndPointBuilder[*openai.ListModelRequest, *openai.ListModelResponseBody]().
 		SetNecessaryHeaders("Authorization").
 		SetHandlerChain(api.CompatibleApi.ListModel()).
