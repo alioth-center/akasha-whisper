@@ -11,7 +11,7 @@ var compatibleRouter = http.NewRouter("v1")
 var OpenAiCompatibleRouterGroup = []http.EndPointInterface{
 	http.NewEndPointBuilder[*openai.CompleteChatRequestBody, *openai.CompleteChatResponseBody]().
 		SetNecessaryHeaders("Authorization").
-		SetGinMiddlewares(api.CompatibleApi.StreamingCompleteChat()...).
+		SetCustomRender(true).
 		SetHandlerChain(api.CompatibleApi.CompleteChat()).
 		SetAllowMethods(http.POST).
 		SetRouter(compatibleRouter.Group("/chat/completions")).
