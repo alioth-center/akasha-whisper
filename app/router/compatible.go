@@ -20,7 +20,7 @@ var OpenAiCompatibleRouterGroup = []http.EndPointInterface{
 		SetNecessaryHeaders("Authorization").
 		SetHandlerChain(api.CompatibleApi.Embedding()).
 		SetAllowMethods(http.POST).
-		SetRouter(compatibleRouter.Group("/embedding")).
+		SetRouter(compatibleRouter.Group("/embeddings")).
 		Build(),
 	http.NewEndPointBuilder[*openai.ListModelRequest, *openai.ListModelResponseBody]().
 		SetNecessaryHeaders("Authorization").
