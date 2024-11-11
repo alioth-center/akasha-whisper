@@ -10,7 +10,8 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on:
+      group: alioth-runners
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
