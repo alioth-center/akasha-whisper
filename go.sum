@@ -6,6 +6,8 @@ github.com/alioth-center/infrastructure v1.2.20-0.20241111063616-8dbdc7df08ae h1
 github.com/alioth-center/infrastructure v1.2.20-0.20241111063616-8dbdc7df08ae/go.mod h1:QMr9jurGWQ30p0wG2IcatILimuSypnF0YtmyzD2PFmE=
 github.com/alioth-center/infrastructure v1.2.20-0.20241111085658-6fce560bd161 h1:LkA8eeIKgw5VW35kXlEB8n3H2RAn/NQrtT2m3hFSIpc=
 github.com/alioth-center/infrastructure v1.2.20-0.20241111085658-6fce560bd161/go.mod h1:QMr9jurGWQ30p0wG2IcatILimuSypnF0YtmyzD2PFmE=
+github.com/alioth-center/infrastructure v1.2.20-0.20241112031010-8e9aab287dbc h1:HdoNIryOSnfdDrhzNrc+qNGThApGC7l/kN6nQQrfQak=
+github.com/alioth-center/infrastructure v1.2.20-0.20241112031010-8e9aab287dbc/go.mod h1:QMr9jurGWQ30p0wG2IcatILimuSypnF0YtmyzD2PFmE=
 github.com/bits-and-blooms/bitset v1.10.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/bits-and-blooms/bitset v1.14.2 h1:YXVoyPndbdvcEVcseEovVfp0qjJp7S+i5+xgp/Nfbdc=
 github.com/bits-and-blooms/bitset v1.14.2/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
