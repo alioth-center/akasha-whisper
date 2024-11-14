@@ -9,6 +9,7 @@ func serveBackend() {
 	engine := http.NewEngine(global.Config.HttpEngine.ServeURL)
 
 	engine.AddEndPoints(OpenAiCompatibleRouterGroup...)
+	engine.AddEndPoints(FrameworkRouterGroup...)
 
 	if global.Config.HttpEngine.EnableManagementApis {
 		engine.AddEndPoints(ManagementRouterGroup...)
