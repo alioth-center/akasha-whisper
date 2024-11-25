@@ -98,6 +98,12 @@ func GetAvailableClient(ctx context.Context, key string, modelName string, promp
 
 func CalculatePromptToken(inputs ...string) (promptToken int64) {
 	for _, input := range inputs {
+		if len([]rune(input)) > 2500 {
+			// tokenizer has performance issue with large input length, use a simple method to calculate token
+			promptToken += int64(len([]rune(input)) / 4)
+			continue
+		}
+
 		promptToken += int64(tokenizer.MustCalToken(input))
 	}
 
